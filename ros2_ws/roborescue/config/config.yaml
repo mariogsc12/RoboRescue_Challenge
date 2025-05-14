@@ -1,0 +1,5 @@
+turtle_controller:
+  ros__parameters:
+    turtlesim_screen_max: 11.0
+    turtlesim_screen_min: 0.0
+    screen_color_limit: 5.5
