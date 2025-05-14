@@ -1,0 +1,7 @@
+# Ignore building files
+**/build
+**/install
+**/log
+
+# Ignore vscode configuration files
+*.vscode
