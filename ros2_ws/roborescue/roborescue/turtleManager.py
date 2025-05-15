@@ -2,10 +2,14 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
 from turtlesim.msg import Pose
 from geometry_msgs.msg import Twist
 from turtlesim.srv import SetPen
 from functools import partial
+from roborescue.action import GoTo
+from rclpy.executors import ExternalShutdownException
+
 import random
 import math
 import sys
@@ -13,8 +17,10 @@ import sys
 class TurtleManager(Node):
     def __init__(self):
         super().__init__("turtle_manager")
-        self.pose_sub = self.create_subscription(Pose, '/turtle1/pose', self.poseCallback, 10)
-        self.cmd_vel_pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
+        #self.pose_sub = self.create_subscription(Pose, '/turtle1/pose', self.poseCallback, 10)
+        #self.cmd_vel_pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
+
+        self._action_client = ActionClient(self, GoTo, 'GoTo')
         
         self.prev_pose = 0.0
         self.pose = Pose()
@@ -41,46 +47,47 @@ class TurtleManager(Node):
 
 
     def poseCallback(self, pose: Pose):
-        cmd_vel = Twist()
         self.pose = pose
         self.pose.x = round(self.pose.x,2)
         self.pose.y = round(self.pose.y,2)
-
-        self.go_to_goal()
 
         if (self.prev_pose <= self.screen_color_limit and pose.x > self.screen_color_limit) or (self.prev_pose >= self.screen_color_limit and pose.x < self.screen_color_limit):
             self.pen_service(random.randint(0,255), random.randint(0,255), random.randint(0,20), 3, 0)
             self.prev_pose = pose.x 
             self.get_logger().info(f"The turtle crossed the limit. Changing the color.")
 
-    def go_to_goal(self):
-        goal = Pose()
-        goal.x = float(sys.argv[1])
-        goal.y = float(sys.argv[2])
-        goal.theta = float(sys.argv[3])
+    def send_goal(self, x, y, theta):
+        # Wait server
+        self.get_logger().info('Waiting for action server...')
+        self._action_client.wait_for_server()
 
-        new_vel = Twist()
+        self.get_logger().info(f"Sending goal: {x, y, theta}")
+        goal_msg = GoTo.Goal()
+        goal_msg.x = x
+        goal_msg.y = y
+        goal_msg.theta = theta  
+        self._send_goal_future = self._action_client.send_goal_async(
+            goal_msg,
+            feedback_callback=self.feedback_callback)
+        self._send_goal_future.add_done_callback(self.goal_response_callback)
 
-        linear_x_error = goal.x - self.pose.x
-        linear_y_error = goal.y - self.pose.y
+    def goal_response_callback(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().info('Goal rejected.')
+            return
 
-        goal_angle = math.atan2(linear_y_error, linear_x_error)
-        dist_error = math.sqrt(linear_x_error**2 + linear_y_error**2)
-        
-        angular_error = goal_angle - self.pose.theta
-        
-        # Proportional controller 
-        if abs(angular_error) > self.angular_tolerance:
-            new_vel.angular.z = self.kp_angle * angular_error
-        else:
-            if dist_error >= self.distance_tolerance:
-                new_vel.linear.x = self.kp_dist * dist_error
-            else:
-                new_vel.linear.x = 0.0
-                self.get_logger().info("Goal reached")
-                quit()
+        self.get_logger().info('Goal accepted.')
+        self._get_result_future = goal_handle.get_result_async()
+        self._get_result_future.add_done_callback(self.get_result_callback)
 
-        self.cmd_vel_pub.publish(new_vel)
+    def get_result_callback(self, future):
+        result = future.result().result
+        self.get_logger().info(f'Result: success={result.success}')
+
+    def feedback_callback(self, feedback_msg):
+        feedback = feedback_msg.feedback
+        self.get_logger().info(f'Current position: x={feedback.x:.2f}, y={feedback.y:.2f}')
         
 
     def pen_service(self, r, g, b, width, off):
@@ -104,12 +111,17 @@ class TurtleManager(Node):
         except Exception as e:
             self.get_logger().error("Service call failed: %r" %(e,))
 
-def main():
-    rclpy.init()
-    turtle_manager = TurtleManager()
-    rclpy.spin(turtle_manager)
-    turtle_manager.destroy_node()
-    rclpy.shutdown()
+def main(args=None):
+    rclpy.init(args=args)
+    node = TurtleManager()  
+    node.send_goal(5.0,10.0,0.0)
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == "__main__":
     main()

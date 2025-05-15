@@ -3,7 +3,8 @@ turtle_controller:
     turtlesim_screen_max: 11.0
     turtlesim_screen_min: 0.0
     screen_color_limit: 5.5
-    angular_tolerance: 0.01
-    distance_tolerance: 0.1
+    angular_tolerance: 0.1
+    distance_tolerance: 0.01
     kp_dist: 1.5
     kp_angle: 1.5
+    max_angular_vel: 2.0

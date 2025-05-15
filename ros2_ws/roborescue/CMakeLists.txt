@@ -7,12 +7,12 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(turtlesim REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
-ament_python_install_package(${PROJECT_NAME})
 
 install(
   DIRECTORY launch config
@@ -21,7 +21,13 @@ install(
 
 install(PROGRAMS 
   ${PROJECT_NAME}/turtleManager.py
+  ${PROJECT_NAME}/goto_action_server.py
   DESTINATION lib/${PROJECT_NAME}
+)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "action/GoTo.action"
+  DEPENDENCIES geometry_msgs 
 )
 
 ament_package()
