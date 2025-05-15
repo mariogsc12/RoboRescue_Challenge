@@ -15,7 +15,7 @@ def generate_launch_description():
 
     controller = Node(
         package="roborescue",
-        executable="turtleController.py",
+        executable="turtleManager.py",
         parameters=[os.path.join(get_package_share_directory("roborescue"),"config","config.yaml")]
     )
 

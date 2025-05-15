@@ -20,7 +20,7 @@ install(
 )
 
 install(PROGRAMS 
-  ${PROJECT_NAME}/turtleController.py
+  ${PROJECT_NAME}/turtleManager.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
