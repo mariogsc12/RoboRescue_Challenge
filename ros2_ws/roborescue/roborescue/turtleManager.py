@@ -28,12 +28,16 @@ class TurtleManager(Node):
         self.declare_parameter('screen_color_limit', 5.0) 
         self.declare_parameter('angular_tolerance', 0.01) 
         self.declare_parameter('distance_tolerance', 0.1) 
+        self.declare_parameter('kp_dist', 1.5) 
+        self.declare_parameter('kp_angle', 1.5) 
 
         self.screen_max = self.get_parameter('turtlesim_screen_max').get_parameter_value().double_value
         self.screen_min = self.get_parameter('turtlesim_screen_min').get_parameter_value().double_value
         self.screen_color_limit = self.get_parameter('screen_color_limit').get_parameter_value().double_value
         self.angular_tolerance = self.get_parameter('angular_tolerance').get_parameter_value().double_value
         self.distance_tolerance = self.get_parameter('distance_tolerance').get_parameter_value().double_value
+        self.kp_dist = self.get_parameter('kp_dist').get_parameter_value().double_value
+        self.kp_angle = self.get_parameter('kp_angle').get_parameter_value().double_value
 
 
     def poseCallback(self, pose: Pose):
@@ -67,10 +71,10 @@ class TurtleManager(Node):
         
         # Proportional controller 
         if abs(angular_error) > self.angular_tolerance:
-            new_vel.angular.z = angular_error
+            new_vel.angular.z = self.kp_angle * angular_error
         else:
             if dist_error >= self.distance_tolerance:
-                new_vel.linear.x = dist_error
+                new_vel.linear.x = self.kp_dist * dist_error
             else:
                 new_vel.linear.x = 0.0
                 self.get_logger().info("Goal reached")
