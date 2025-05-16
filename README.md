@@ -27,17 +27,18 @@ The goal of the project is to control the turtle in the turtlesim simulator usin
 
 ## 🚀 How to Run the Project
 
-### 1. Clone the repository and build the workspace:
+### 1. Clone the repository in the home and build the workspace:
 ```bash
+cd
 git clone https://github.com/mariogsc12/RoboRescue_Challenge.git
-cd RoboRescue_Challenge/ros2_ws/
+cd ~/RoboRescue_Challenge/ros2_ws/
 colcon build
 source install/setup.bash
 ```
 
 ### 2.1 Run the project using the provided bash script:
 ```bash
-cd utils
+cd ~/RoboRescue_Challenge/utils
 bash launch.sh
 ```
 ### 2.2 Run the project using the launch script:
