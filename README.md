@@ -46,11 +46,6 @@ ros2 launch roborescue launch.launch.py
 
   - turtlesim package
 
-  - GNOME Terminal for multi-terminal script
-    ```bash
-    sudo apt update
-    sudo apt install gnome-terminal
-    ```
 
 ## 🎥 Demo Video
 ...
