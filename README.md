@@ -11,7 +11,6 @@ The goal of the project is to control the turtle in the turtlesim simulator usin
 ## 📁 Repository Contents
 
 - `ros2_ws/`: ROS 2 package containing all source code.
-- `utils/`: Bash script to open three terminals and launch each node for optimal visualization.
 - `media/`: Video demonstrating the result.
 
 ---
@@ -20,7 +19,7 @@ The goal of the project is to control the turtle in the turtlesim simulator usin
 
 - ✅ Draws "ROBORESCUE" in the turtlesim window by excluding those regions from the background fill.
 - ✅ Uses a modular architecture with clear separation between drawing logic, control loops, and utilities.
-- ✅ Includes a `ros2 launch` and `.sh` file for ease of use.
+- ✅ Includes a `ros2 launch` file for ease of use.
 - ✅ Use a YAML file to manage configuration parameters. 
 
 ---
@@ -36,12 +35,7 @@ colcon build
 source install/setup.bash
 ```
 
-### 2.1 Run the project using the provided bash script:
-```bash
-cd ~/RoboRescue_Challenge/utils
-bash launch.sh
-```
-### 2.2 Run the project using the launch script:
+### 2. Run the project using the launch script:
 ```bash
 ros2 launch roborescue launch.launch.py
 ```
