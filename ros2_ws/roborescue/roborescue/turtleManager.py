@@ -14,47 +14,63 @@ import random
 import math
 import sys
 
+class DrawLetters:
+    def __init__(self, length, width):
+        self.length = length
+        self.width = width
+
+    def draw_R(self, origin_x=5.54, origin_y=5.54):
+        """ Returns a list of points (x,y) to draw the letter R"""
+        l = self.length
+        w = self.width
+        x0, y0 = origin_x, origin_y
+
+        points = [
+            (x0, y0),               # Start point (bottom)
+            (x0, y0 + l),           # Vertical line up
+            (x0 + w, y0 + l),       # Top horizontal line
+            (x0 + w, y0 + l / 2),   # Down to mid-height
+            (x0, y0 + l / 2),       # Horizontal back to the left
+            (x0 + w, y0)            # Diagonal leg of the 'R'
+        ]
+        return points
+
 class TurtleManager(Node):
     def __init__(self):
         super().__init__("turtle_manager")
-        #self.pose_sub = self.create_subscription(Pose, '/turtle1/pose', self.poseCallback, 10)
+        self.pose_sub = self.create_subscription(Pose, '/turtle1/pose', self.poseCallback, 10)
         #self.cmd_vel_pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
 
         self._action_client = ActionClient(self, GoTo, 'GoTo')
-        
-        self.prev_pose = 0.0
-        self.pose = Pose()
+        self.current_pose = Pose()
 
         self.get_config_parameters()
-        self.get_logger().info("Turtle controller created")
+
+        self.letter_info = DrawLetters(self.letter_height, self.letter_width)
+        self.get_logger().info("Turtle manager created.")
+
+        self.trajectory_planner()
 
     def get_config_parameters(self):
         self.declare_parameter('turtlesim_screen_max', 11.0) 
         self.declare_parameter('turtlesim_screen_min', 0.0) 
         self.declare_parameter('screen_color_limit', 5.0) 
-        self.declare_parameter('angular_tolerance', 0.01) 
-        self.declare_parameter('distance_tolerance', 0.1) 
-        self.declare_parameter('kp_dist', 1.5) 
-        self.declare_parameter('kp_angle', 1.5) 
+        self.declare_parameter('letter_width', 1.0) 
+        self.declare_parameter('letter_height', 3.0) 
 
         self.screen_max = self.get_parameter('turtlesim_screen_max').get_parameter_value().double_value
         self.screen_min = self.get_parameter('turtlesim_screen_min').get_parameter_value().double_value
         self.screen_color_limit = self.get_parameter('screen_color_limit').get_parameter_value().double_value
-        self.angular_tolerance = self.get_parameter('angular_tolerance').get_parameter_value().double_value
-        self.distance_tolerance = self.get_parameter('distance_tolerance').get_parameter_value().double_value
-        self.kp_dist = self.get_parameter('kp_dist').get_parameter_value().double_value
-        self.kp_angle = self.get_parameter('kp_angle').get_parameter_value().double_value
+        self.letter_width = self.get_parameter('letter_width').get_parameter_value().double_value
+        self.letter_height = self.get_parameter('letter_height').get_parameter_value().double_value
 
-
-    def poseCallback(self, pose: Pose):
-        self.pose = pose
-        self.pose.x = round(self.pose.x,2)
-        self.pose.y = round(self.pose.y,2)
-
-        if (self.prev_pose <= self.screen_color_limit and pose.x > self.screen_color_limit) or (self.prev_pose >= self.screen_color_limit and pose.x < self.screen_color_limit):
-            self.pen_service(random.randint(0,255), random.randint(0,255), random.randint(0,20), 3, 0)
-            self.prev_pose = pose.x 
-            self.get_logger().info(f"The turtle crossed the limit. Changing the color.")
+    
+    def trajectory_planner(self):
+        """ Wrapper function to manage the turtle trajectory"""
+        
+        for waypoint in self.letter_info.draw_R():
+            goal_future = self.send_goal(waypoint[0], waypoint[1], 0.0)
+            rclpy.spin_until_future_complete(self, goal_future)
 
     def send_goal(self, x, y, theta):
         # Wait server
@@ -66,10 +82,26 @@ class TurtleManager(Node):
         goal_msg.x = x
         goal_msg.y = y
         goal_msg.theta = theta  
-        self._send_goal_future = self._action_client.send_goal_async(
+
+        # Send goal
+        send_goal_future = self._action_client.send_goal_async(
             goal_msg,
-            feedback_callback=self.feedback_callback)
-        self._send_goal_future.add_done_callback(self.goal_response_callback)
+            feedback_callback=self.feedback_callback
+        )
+
+        # Wait for the goal to be accepted and get result future
+        rclpy.spin_until_future_complete(self, send_goal_future)
+        goal_handle = send_goal_future.result()
+
+        if not goal_handle.accepted:
+            self.get_logger().info('Goal rejected.')
+            return None
+
+        self.get_logger().info('Goal accepted.')
+
+        # Wait for result
+        get_result_future = goal_handle.get_result_async()
+        return get_result_future
 
     def goal_response_callback(self, future):
         goal_handle = future.result()
@@ -83,12 +115,14 @@ class TurtleManager(Node):
 
     def get_result_callback(self, future):
         result = future.result().result
-        self.get_logger().info(f'Result: success={result.success}')
+        self.get_logger().info(f'Result: success={result.result}')
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
         self.get_logger().info(f'Current position: x={feedback.x:.2f}, y={feedback.y:.2f}')
         
+    def poseCallback(self, pose_msg:Pose):
+        self.current_pose = pose_msg
 
     def pen_service(self, r, g, b, width, off):
         client = self.create_client(SetPen, "/turtle1/set_pen")
@@ -104,6 +138,8 @@ class TurtleManager(Node):
 
         future = client.call_async(request)
         future.add_done_callback(partial(self.service_callback))
+        
+        self.get_logger().info(f"Color changed to {r,g,b}")
 
     def service_callback(self, future):
         try:
@@ -114,7 +150,7 @@ class TurtleManager(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = TurtleManager()  
-    node.send_goal(5.0,10.0,0.0)
+
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

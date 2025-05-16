@@ -55,7 +55,7 @@ class GoToActionServer(Node):
         self.angular_tolerance = self.get_parameter('angular_tolerance').get_parameter_value().double_value
         self.distance_tolerance = self.get_parameter('distance_tolerance').get_parameter_value().double_value
         self.max_angular_vel = self.get_parameter('max_angular_vel').get_parameter_value().double_value
-
+ 
     def destroy(self):
         self._action_server.destroy()
         super().destroy_node()
