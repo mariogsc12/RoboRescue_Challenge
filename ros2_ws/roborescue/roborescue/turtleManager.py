@@ -5,7 +5,7 @@ from rclpy.node import Node
 from rclpy.action import ActionClient
 from turtlesim.msg import Pose
 from geometry_msgs.msg import Twist
-from turtlesim.srv import SetPen
+from turtlesim.srv import SetPen, TeleportAbsolute, TeleportRelative
 from functools import partial
 from roborescue.action import GoTo
 from rclpy.executors import ExternalShutdownException
@@ -57,18 +57,28 @@ class TurtleManager(Node):
         self.declare_parameter('screen_color_limit', 5.0) 
         self.declare_parameter('letter_width', 1.0) 
         self.declare_parameter('letter_height', 3.0) 
+        self.declare_parameter('screen_color', [0,0,255]) 
+        self.declare_parameter('line_default_color', [255,255,255]) 
+        self.declare_parameter('line_width', 3) 
 
         self.screen_max = self.get_parameter('turtlesim_screen_max').get_parameter_value().double_value
         self.screen_min = self.get_parameter('turtlesim_screen_min').get_parameter_value().double_value
         self.screen_color_limit = self.get_parameter('screen_color_limit').get_parameter_value().double_value
         self.letter_width = self.get_parameter('letter_width').get_parameter_value().double_value
         self.letter_height = self.get_parameter('letter_height').get_parameter_value().double_value
+        self.screen_color = self.get_parameter('screen_color').get_parameter_value().integer_array_value
+        self.line_default_color = self.get_parameter('line_default_color').get_parameter_value().integer_array_value
+        self.line_width = self.get_parameter('line_width').get_parameter_value().integer_value
 
     
     def trajectory_planner(self):
         """ Wrapper function to manage the turtle trajectory"""
         
-        for waypoint in self.letter_info.draw_R():
+        initial_x = 1.0
+        initial_y = 1.0
+
+        self.teleport_absoulte_service(initial_x,initial_y,0.0)
+        for waypoint in self.letter_info.draw_R(initial_x,initial_y):
             goal_future = self.send_goal(waypoint[0], waypoint[1], 0.0)
             rclpy.spin_until_future_complete(self, goal_future)
 
@@ -140,6 +150,51 @@ class TurtleManager(Node):
         future.add_done_callback(partial(self.service_callback))
         
         self.get_logger().info(f"Color changed to {r,g,b}")
+
+    def teleport_relative_service(self, linear, angular):
+        """ Service wrapper to move the turtle to a relative position"""
+
+        # Change the color to the screen color to hide the line
+        self.pen_service(self.screen_color[0],self.screen_color[1],self.screen_color[2],self.line_width, 0)
+
+        client = self.create_client(TeleportRelative, "/turtle1/teleport_relative")
+        while not client.wait_for_service(1.0):
+            self.get_logger().info("Waiting for service teleport relative...")
+        
+        request = TeleportRelative.Request()
+        request.linear = linear
+        request.angular = angular
+
+        future = client.call_async(request)
+        future.add_done_callback(partial(self.service_callback))
+
+        # Change the color to the default line color to hide the line
+        self.pen_service(self.line_default_color[0],self.line_default_color[1],self.line_default_color[2],self.line_width, 0)
+        
+        self.get_logger().info(f"Turtle teleported to the {linear, angular} relative position")
+
+    def teleport_absoulte_service(self, x, y , theta):
+        """ Service wrapper to move the turtle to an absolute position"""
+
+        # Change the color to the screen color to hide the line
+        self.pen_service(self.screen_color[0],self.screen_color[1],self.screen_color[2],self.line_width, 0)
+
+        client = self.create_client(TeleportAbsolute, "/turtle1/teleport_absolute")
+        while not client.wait_for_service(1.0):
+            self.get_logger().info("Waiting for service teleport absolute...")
+        
+        request = TeleportAbsolute.Request()
+        request.x = x
+        request.y = y
+        request.theta = theta
+
+        future = client.call_async(request)
+        future.add_done_callback(partial(self.service_callback))
+
+        # Change the color to the default line color to hide the line
+        self.pen_service(self.line_default_color[0],self.line_default_color[1],self.line_default_color[2],self.line_width, 0)
+        
+        self.get_logger().info(f"Turtle teleported to {x,y,theta}")
 
     def service_callback(self, future):
         try:
