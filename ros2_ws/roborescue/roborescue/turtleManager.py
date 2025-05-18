@@ -129,7 +129,7 @@ class TurtleManager(Node):
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
-        self.get_logger().info(f'Current position: x={feedback.x:.2f}, y={feedback.y:.2f}')
+        #self.get_logger().info(f'Current position: x={feedback.x:.2f}, y={feedback.y:.2f}')
         
     def poseCallback(self, pose_msg:Pose):
         self.current_pose = pose_msg

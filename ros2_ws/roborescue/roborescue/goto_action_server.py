@@ -117,15 +117,15 @@ class GoToActionServer(Node):
                 break
 
             # Proportional control
-            self.get_logger().info(f'angular error: {angular_error}, linear: {linear_x_error, linear_y_error}')
+            #self.get_logger().info(f'angular error: {angular_error:.2f}, linear_x: {linear_x_error:.2f}, linear_y: {linear_y_error:.2f}')
             if abs(angular_error) > self.angular_tolerance:
                 self.new_vel.angular.z = max(min(self.kp_angle * angular_error, self.max_angular_vel), -self.max_angular_vel)
                 self.new_vel.linear.x = 0.0
-                self.get_logger().info(f'changing angular vel')
+                #self.get_logger().info(f'changing angular vel')
             else:
                 if dist_error >= self.distance_tolerance:
                     self.new_vel.linear.x = self.kp_dist * dist_error
-                    self.get_logger().info(f'changing linear vel')
+                    #self.get_logger().info(f'changing linear vel')
                 else:
                     self.new_vel.linear.x = 0.0
                     self.new_vel.angular.z = 0.0
