@@ -17,9 +17,10 @@ The goal of the project is to control the turtle in the turtlesim simulator usin
 
 ## 🧠 Project Highlights
 
-- ✅ Draws "ROBORESCUE" in the turtlesim window by excluding those regions from the background fill.
-- ✅ Uses a modular architecture with clear separation between drawing logic, control loops, and utilities.
-- ✅ Includes a `ros2 launch` file for ease of use.
+- ✅ Draw "ROBORESCUE" in the turtlesim window by excluding those regions from the background fill.
+- ✅ Use a modular architecture with clear separation between drawing logic, control loops, and utilities.
+- ✅ Use turtlesim services to improve the turtle movement and word visualization
+- ✅ Include a `ros2 launch` file for ease of use.
 - ✅ Use a YAML file to manage configuration parameters. 
 
 ---
@@ -44,7 +45,7 @@ ros2 launch roborescue launch.launch.py
 
   - ROS 2 Humble 
 
-  - turtlesim package
+  - turtlesim package (http://wiki.ros.org/turtlesim)
 
 
 ## 🎥 Demo Video
