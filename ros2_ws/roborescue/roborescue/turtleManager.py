@@ -26,12 +26,16 @@ class DrawLetters:
         x0, y0 = origin_x, origin_y
 
         points = [
-            (x0, y0),               # Start point (bottom)aaa
-            (x0, y0 + l),           # Vertical line up
-            (x0 + w, y0 + l),       # Top horizontal line
-            (x0 + w, y0 + l / 2),   # Down to mid-height
-            (x0, y0 + l / 2),       # Horizontal back to the left
-            (x0 + w, y0)            # Diagonal leg of the 'R'
+            (x0, y0),               # inicio
+            (x0, y0 + l),           # linea vertical hacia arriba de longitud altura de letra
+            (x0 + w, y0 + l),       # linea horizontal hacia derecha de longitud ancho de letra
+            (x0 + w, y0 + l / 2),   # Bajada de longitud mitad de alto de letra
+            (x0 + w/2, y0 + l / 2), # Horizontal hacia izquierda hasta la mitad del valor de la longitud del ancho
+            (x0 + w, y0),           # diagonal hasta el punto con Y=0 y X=ancho
+            (x0 + w / 2, y0),       # horizontal hasta la mitad del ancho
+            (x0 + w/3, y0 + l / 2), # Diagonal hacia la mitad de la altura de la letra
+            (x0 + w/3, y0),         # Vertical hacia abajo hasta el punto con Y=0 y X=ancho/3
+            (x0, y0)                # Horizontal hacia la izquierda hasta el punto de inicio
         ]
         return points
 
