@@ -26,7 +26,7 @@ class DrawLetters:
         x0, y0 = origin_x, origin_y
 
         points = [
-            (x0, y0),               # Start point (bottom)
+            (x0, y0),               # Start point (bottom)aaa
             (x0, y0 + l),           # Vertical line up
             (x0 + w, y0 + l),       # Top horizontal line
             (x0 + w, y0 + l / 2),   # Down to mid-height
