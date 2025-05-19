@@ -1,13 +1,13 @@
 turtle_manager:
   ros__parameters:
-    turtlesim_screen_max: 11.0
-    turtlesim_screen_min: 0.0
+    word: "ROBO"
     screen_color_limit: 5.5
     letter_height: 3.0
     letter_with: 5.0
     screen_color: [69, 86, 255]
     line_default_color: [255,255,255]
     line_widht: 3
+    letter_offset: [0.25, 0.0]
 
 goto_action_server:
   ros__parameters:
