@@ -39,15 +39,25 @@ class DrawLetters:
 
         points = [
             (x0, y0),               # start point
-            (x0, y0 + l),           # vertical line upward by letter height
-            (x0 + w, y0 + l),       # horizontal line right by letter width
-            (x0 + w, y0 + l / 2),   # downward line by half the letter height
-            (x0 + w/2, y0 + l / 2), # horizontal line left to half the letter width
-            (x0 + w, y0),           # diagonal to the point at y=0 and x=width
-            (x0 + w / 2, y0),       # horizontal line to half the width
-            (x0 + w/3, y0 + l / 2), # diagonal to halfway up the letter height
-            (x0 + w/3, y0),         # vertical line down to the point at y=0 and x=width/3
-            (x0, y0)                # horizontal line left back to the start point
+            (x0 - w/2, y0),
+            (x0 - (2*w)/3, y0 + l / 2), # diagonal to halfway up the letter height
+            (x0 - (2*w)/3, y0),         # vertical line down to the point at y=0 and x=width/3
+            (x0 - w, y0),
+            (x0 - w, y0 + l),
+            (x0, y0 + l),           
+            (x0, y0 + l / 2),
+            (x0 - w/2, y0 + l / 2),
+            (x0, y0)
+
+            # //(x0, y0 + l),           # vertical line upward by letter height
+            # (x0 + w, y0 + l),       # horizontal line right by letter width
+            # (x0 + w, y0 + l / 2),   # downward line by half the letter height
+            # (x0 + w/2, y0 + l / 2), # horizontal line left to half the letter width
+            # (x0 + w, y0),           # diagonal to the point at y=0 and x=width
+            # (x0 + w / 2, y0),       # horizontal line to half the width
+            # (x0 + w/3, y0 + l / 2), # diagonal to halfway up the letter height
+            # (x0 + w/3, y0),         # vertical line down to the point at y=0 and x=width/3
+            # (x0, y0)                # horizontal line left back to the start point
         ]
 
         return points
@@ -60,10 +70,10 @@ class DrawLetters:
 
         points = [
             (x0, y0),               # start point
-            (x0, y0 + l),           # vertical line upward by letter height
-            (x0 + w, y0 + l),       # horizontal line right by letter width
-            (x0 + w, y0),           # vertical line downward by letter height
-            (x0, y0)                # horizontal line left back to the start point
+            (x0-w, y0),             # horizontal line left by letter width
+            (x0-w, y0 + l),         # vertical line upward by letter height
+            (x0, y0 + l),           # horizontal line right by letter width
+            (x0, y0),               # vertical line downward by letter height
         ]
 
         return points
@@ -76,11 +86,16 @@ class DrawLetters:
 
         points = [
             (x0, y0),               # start point
-            (x0, y0 + l),           # vertical line upward by letter height
-            (x0 + w, y0 + l),       # horizontal line right by letter width
-            (x0 + w/2, y0 + l/2),   # diagonal to the center point
-            (x0 + w, y0),           # diagonal to the right down point
-            (x0, y0)                # horizontal line left back to the start point
+            (x0-w, y0),             # horizontal line left by letter width
+            (x0-w, y0 + l),         # vertical line upward by letter height
+            (x0, y0 + l),           # horizontal line right by letter width
+            (x0-w/2, y0 + l / 2),   # diagonal line downward by half the letter height
+            (x0, y0),               # diagonal line right back to the start point
+            # (x0, y0 + l),           # vertical line upward by letter height
+            # (x0 + w, y0 + l),       # horizontal line right by letter width
+            # (x0 + w/2, y0 + l/2),   # diagonal to the center point
+            # (x0 + w, y0),           # diagonal to the right down point
+            # (x0, y0)                # horizontal line left back to the start point
         ]
 
         return points
@@ -124,7 +139,7 @@ class TurtleManager(Node):
     def trajectory_planner(self):
         """ Wrapper function to manage the turtle trajectory"""
         
-        initial_x = 1.0
+        initial_x = 2.0
         initial_y = 5.0
 
         for letter in self.word:
