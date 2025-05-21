@@ -21,10 +21,6 @@ class GoToActionServer(Node):
     def __init__(self):
         super().__init__('goto_action_server')
 
-        self.goal = GoTo.Goal()
-        self.cmd_vel_pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
-        self.pose_sub = self.create_subscription(Pose, '/turtle1/pose', self.poseCallback, 10)
-
         self._action_server = ActionServer(
             self,
             GoTo,
@@ -34,10 +30,11 @@ class GoToActionServer(Node):
             goal_callback=self.goal_callback,
             cancel_callback=self.cancel_callback)
         
-        self.current_pose = Pose()
-        self.current_pose.x = 0.0
-        self.current_pose.y = 0.0
-        self.current_pose.theta = 0.0
+        self.goals = {}  
+        self.cmd_vel_pubs = {}  
+        self.pose_subs = {}     
+        self.poses = {}         
+        self.current_poses = {}         
         
         self.get_config_parameters()
         
@@ -60,8 +57,11 @@ class GoToActionServer(Node):
         self._action_server.destroy()
         super().destroy_node()
 
-    def poseCallback(self, msg:Pose):
-        self.current_pose = msg
+
+    def pose_callback_factory(self, turtle_id):
+        def callback(msg):
+            self.poses[turtle_id] = msg
+        return callback
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
@@ -84,34 +84,71 @@ class GoToActionServer(Node):
     
     async def execute_callback(self, goal_handle):
         """Execute a goal."""
-        self.get_logger().info('Executing goal...')
 
+        # Store input parameters 
         goal = goal_handle.request
-        self.new_vel = Twist()
-
+        turtle_id = goal.turtle_id
         target_x = goal.x
         target_y = goal.y
+        target_theta = goal.theta
+
+        self.get_logger().info('Executing goal...')
+
+        pose = self.poses.get(goal.turtle_id)
+
+        if pose is None:
+            self.get_logger().warn(f"No pose yet for turtle id {goal.turtle_id}, waiting...")
+            time.sleep(0.1)
+
+
+        # Create publisher and subscriber if not exist for this turtle 
+        if turtle_id not in self.cmd_vel_pubs:
+            cmd_vel_topic = f'/turtle{turtle_id}/cmd_vel'
+            self.cmd_vel_pubs[turtle_id] = self.create_publisher(Twist, cmd_vel_topic, 10)
+            self.get_logger().info(f'Publisher creado en {cmd_vel_topic}')
+        
+        if turtle_id not in self.pose_subs:
+            pose_topic = f'/turtle{turtle_id}/pose'
+            self.pose_subs[turtle_id] = self.create_subscription(
+                Pose,
+                pose_topic,
+                self.pose_callback_factory(turtle_id),
+                10
+            )
+            current_pose = self.poses[turtle_id] = Pose()
+            self.get_logger().info(f'Subscriber {pose_topic} created for turtle{turtle_id} ')
+
+        publisher = self.cmd_vel_pubs[turtle_id]
+        new_vel = Twist()
+
+        if turtle_id not in self.poses:
+            self.get_logger().info(f"No pose yet for turtle id {turtle_id}, waiting...")
+            return
+        current_pose = self.poses[turtle_id]
 
         # Initialize errors
-        linear_x_error = target_x - self.current_pose.x
-        linear_y_error = target_y - self.current_pose.y
+        linear_x_error = target_x - current_pose.x
+        linear_y_error = target_y - current_pose.y
         dist_error = math.hypot(linear_x_error, linear_y_error)
         goal_angle = math.atan2(linear_y_error, linear_x_error)
-        angular_error = goal_angle - self.current_pose.theta
+        angular_error = goal_angle - current_pose.theta
         
+        self.get_logger().info(f'Executing goal for turtle{turtle_id}: x={target_x}, y={target_y} ')
 
         while True:
             if goal_handle.is_cancel_requested:
                 goal_handle.canceled()
-                self.get_logger().info('Goal canceled')
+                self.get_logger().info(f'Goal canceled for turtle{turtle_id}')
                 return GoTo.Result()
+            
+            current_pose = self.poses[turtle_id]
 
             # Update errors
-            linear_x_error = target_x - self.current_pose.x
-            linear_y_error = target_y - self.current_pose.y
+            linear_x_error = target_x - current_pose.x
+            linear_y_error = target_y - current_pose.y
             dist_error = math.hypot(linear_x_error, linear_y_error)
             goal_angle = math.atan2(linear_y_error, linear_x_error)
-            angular_error = self.normalize_angle(goal_angle - self.current_pose.theta)
+            angular_error = self.normalize_angle(goal_angle - current_pose.theta)
 
             if (abs(angular_error) < self.angular_tolerance and dist_error < self.distance_tolerance):
                 break
@@ -119,24 +156,24 @@ class GoToActionServer(Node):
             # Proportional control
             #self.get_logger().info(f'angular error: {angular_error:.2f}, linear_x: {linear_x_error:.2f}, linear_y: {linear_y_error:.2f}')
             if abs(angular_error) > self.angular_tolerance:
-                self.new_vel.angular.z = max(min(self.kp_angle * angular_error, self.max_angular_vel), -self.max_angular_vel)
-                self.new_vel.linear.x = 0.0
+                new_vel.angular.z = max(min(self.kp_angle * angular_error, self.max_angular_vel), -self.max_angular_vel)
+                new_vel.linear.x = 0.0
                 #self.get_logger().info(f'changing angular vel')
             else:
                 if dist_error >= self.distance_tolerance:
-                    self.new_vel.linear.x = self.kp_dist * dist_error
+                    new_vel.linear.x = self.kp_dist * dist_error
                     #self.get_logger().info(f'changing linear vel')
                 else:
-                    self.new_vel.linear.x = 0.0
-                    self.new_vel.angular.z = 0.0
+                    new_vel.linear.x = 0.0
+                    new_vel.angular.z = 0.0
 
-            self.cmd_vel_pub.publish(self.new_vel)
+            publisher.publish(new_vel)
 
             # Update feedback
             feedback = GoTo.Feedback()
-            feedback.x = self.current_pose.x
-            feedback.y = self.current_pose.y
-            feedback.theta = self.current_pose.theta
+            feedback.x = current_pose.x
+            feedback.y = current_pose.y
+            feedback.theta = current_pose.theta
             goal_handle.publish_feedback(feedback)
 
             time.sleep(0.05)
@@ -148,7 +185,7 @@ class GoToActionServer(Node):
         goal_handle.succeed()
         result = GoTo.Result()
         result.result = True
-        self.get_logger().info('Returning result: True')
+        self.get_logger().info(f'Goal completed for turtle{turtle_id}')
 
         return result
 

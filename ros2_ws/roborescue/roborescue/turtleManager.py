@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
+from rclpy.executors import MultiThreadedExecutor
 from turtlesim.msg import Pose
 from geometry_msgs.msg import Twist
 from turtlesim.srv import SetPen, TeleportAbsolute, TeleportRelative, Spawn
@@ -106,6 +107,10 @@ class TurtleManager(Node):
 
         self._action_client = ActionClient(self, GoTo, 'GoTo')
 
+        self.cmd_vel_pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
+        
+        self.nb_turtles = 1
+
         self.get_config_parameters()
 
         self.letter_info = DrawLetters(self.letter_height, self.letter_width)
@@ -136,35 +141,52 @@ class TurtleManager(Node):
         self.letter_offset_y = letter_offset[1]
 
     
+    def create_all_turtles(self):
+        """Create all the trutles."""
+        initial_x = 2.0
+        initial_y = 5.0
+        self.turtle_positions = []  # Para guardar posiciones iniciales de cada tortuga
+
+        for i, letter in enumerate(self.word):
+            turtle_name = f"turtle{self.nb_turtles + i}"
+            self.spawn_turtle_service(initial_x, initial_y, 0.0, turtle_name)
+            self.turtle_positions.append((letter, initial_x, initial_y, self.nb_turtles + i))
+            initial_x += self.letter_width + self.letter_offset_x
+            initial_y += self.letter_offset_y
+
     def trajectory_planner(self):
         """ Wrapper function to manage the turtle trajectory"""
-        
+            
         initial_x = 2.0
         initial_y = 5.0
 
         for letter in self.word:
             self.get_logger().info(f'--- Starting to draw {letter} at {initial_x,initial_y} ---')
-            self.teleport_absoulte_service(initial_x,initial_y,0.0)
+            self.teleport_absoulte_service(initial_x,initial_y,0.0, self.nb_turtles)
             waypoints = self.letter_info.letter_manager(letter,initial_x,initial_y)
 
             # Loop to move the turtle to the waypoints of the letter (skip the first one to keep the "hide" line)
             for wp in waypoints[1:]:
-                goal_future = self.send_goal(wp[0], wp[1], 0.0)
+                goal_future = self.send_goal(wp[0], wp[1], 0.0,self.nb_turtles)
                 rclpy.spin_until_future_complete(self, goal_future)
 
-            initial_x = initial_x + self.letter_width + self.letter_offset_x
-            initial_y = initial_y + self.letter_offset_y
+            initial_x = wp[0] + self.letter_width + self.letter_offset_x
+            initial_y = wp[1] + self.letter_offset_y
+
+            self.nb_turtles += 1
+            self.spawn_turtle_service(initial_x,initial_y,0.0,f"turtle{self.nb_turtles}")
 
     # -------- ACTIONS -------
-    def send_goal(self, x, y, theta):
+    def send_goal(self, x, y, theta, turtle_id):
         # Wait server
         self._action_client.wait_for_server()
 
-        self.get_logger().info(f"Sending goal: {x, y, theta}")
+        self.get_logger().info(f"Sending goal: {x, y, theta} to turtle{turtle_id}")
         goal_msg = GoTo.Goal()
         goal_msg.x = x
         goal_msg.y = y
         goal_msg.theta = theta  
+        goal_msg.turtle_id = turtle_id  
 
         # Send goal
         send_goal_future = self._action_client.send_goal_async(
@@ -206,22 +228,22 @@ class TurtleManager(Node):
 
     # ---------- SERVICES ---------
     def spawn_turtle_service(self, x, y, theta, name):
-        client = self.create_client(Spawn, "/turtle1/spawn")
+        client = self.create_client(Spawn, "/spawn")
         while not client.wait_for_service(1.0):
-            self.get_logger().info("Waiting for service spawn...")
+            self.get_logger().info("Waiting for /spawn service...")
 
         req = Spawn.Request()
         req.x = x
         req.y = y
         req.theta = theta
         req.name = name
-        future = self.cli.call_async(req)
+        future = client.call_async(req)
         rclpy.spin_until_future_complete(self, future)
         if future.result():
             self.get_logger().info(f"Spawned {future.result().name} at ({x},{y})")
 
-    def pen_service(self, r, g, b, width, off):
-        client = self.create_client(SetPen, "/turtle1/set_pen")
+    def pen_service(self, r, g, b, width, off, turtle_id):
+        client = self.create_client(SetPen, f"/turtle{turtle_id}/set_pen")
         while not client.wait_for_service(1.0):
             self.get_logger().info("Waiting for service set_pen...")
         
@@ -237,13 +259,13 @@ class TurtleManager(Node):
         
         self.get_logger().info(f"Color changed to {r,g,b}")
 
-    def teleport_relative_service(self, linear, angular):
+    def teleport_relative_service(self, linear, angular, turtle_id):
         """ Service wrapper to move the turtle to a relative position"""
 
         # Change the color to the screen color to hide the line
-        self.pen_service(self.screen_color[0],self.screen_color[1],self.screen_color[2],self.line_width, 0)
+        self.pen_service(self.screen_color[0],self.screen_color[1],self.screen_color[2],self.line_width, 0, turtle_id)
 
-        client = self.create_client(TeleportRelative, "/turtle1/teleport_relative")
+        client = self.create_client(TeleportRelative, f"/turtle{turtle_id}/teleport_relative")
         while not client.wait_for_service(1.0):
             self.get_logger().info("Waiting for service teleport relative...")
         
@@ -255,17 +277,17 @@ class TurtleManager(Node):
         future.add_done_callback(partial(self.service_callback))
 
         # Change the color to the default line color to hide the line
-        self.pen_service(self.line_default_color[0],self.line_default_color[1],self.line_default_color[2],self.line_width, 0)
+        self.pen_service(self.line_default_color[0],self.line_default_color[1],self.line_default_color[2],self.line_width, 0, turtle_id)
         
         self.get_logger().info(f"Turtle teleported to the {linear, angular} relative position")
 
-    def teleport_absoulte_service(self, x, y , theta):
+    def teleport_absoulte_service(self, x, y , theta, turtle_id):
         """ Service wrapper to move the turtle to an absolute position"""
 
         # Change the color to the screen color to hide the line
-        self.pen_service(self.screen_color[0],self.screen_color[1],self.screen_color[2],self.line_width, 0)
+        self.pen_service(self.screen_color[0],self.screen_color[1],self.screen_color[2],self.line_width, 0, turtle_id)
 
-        client = self.create_client(TeleportAbsolute, "/turtle1/teleport_absolute")
+        client = self.create_client(TeleportAbsolute, f"/turtle{turtle_id}/teleport_absolute")
         while not client.wait_for_service(1.0):
             self.get_logger().info("Waiting for service teleport absolute...")
         
@@ -278,7 +300,7 @@ class TurtleManager(Node):
         future.add_done_callback(partial(self.service_callback))
 
         # Change the color to the default line color to hide the line
-        self.pen_service(self.line_default_color[0],self.line_default_color[1],self.line_default_color[2],self.line_width, 0)
+        self.pen_service(self.line_default_color[0],self.line_default_color[1],self.line_default_color[2],self.line_width, 0, turtle_id)
         
         self.get_logger().info(f"Turtle teleported to {x,y,theta}")
 
@@ -290,7 +312,7 @@ class TurtleManager(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = TurtleManager()  
+    node = TurtleManager()
 
     try:
         rclpy.spin(node)
