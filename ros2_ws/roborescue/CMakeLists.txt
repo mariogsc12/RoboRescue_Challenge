@@ -20,14 +20,16 @@ install(
 )
 
 install(PROGRAMS 
-  ${PROJECT_NAME}/turtleManager.py
+  ${PROJECT_NAME}/drawerManager.py
+  ${PROJECT_NAME}/turtleSpawner.py
   ${PROJECT_NAME}/goto_action_server.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/GoTo.action"
-  DEPENDENCIES geometry_msgs 
+  "msg/SpawnMsg.msg"
+  DEPENDENCIES geometry_msgs std_msgs
 )
 
 ament_package()

@@ -15,7 +15,13 @@ def generate_launch_description():
 
     manager = Node(
         package="roborescue",
-        executable="turtleManager.py",
+        executable="drawerManager.py",
+        parameters=[os.path.join(get_package_share_directory("roborescue"),"config","config.yaml")]
+    )
+
+    spawner = Node(
+        package="roborescue",
+        executable="turtleSpawner.py",
         parameters=[os.path.join(get_package_share_directory("roborescue"),"config","config.yaml")]
     )
 
@@ -28,5 +34,6 @@ def generate_launch_description():
     return LaunchDescription([
         turtlesim,
         manager,
+        spawner,
         action_server
     ])

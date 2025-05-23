@@ -10,12 +10,14 @@ from turtlesim.srv import SetPen, TeleportAbsolute, TeleportRelative, Spawn
 from functools import partial
 from roborescue.action import GoTo
 from rclpy.executors import ExternalShutdownException
+from roborescue.msg import SpawnMsg
 
 import random
 import math
 import sys
 
-class DrawLetters:
+
+class LetterManager:
     def __init__(self, length, width):
         self.length = length
         self.width = width
@@ -29,7 +31,6 @@ class DrawLetters:
         elif letter == "B":
             return self.draw_B(origin_x, origin_y)
         else:
-            self.get_logger().error(f"The letter {letter} is not configured.")
             return
 
     def draw_R(self, origin_x=5.54, origin_y=5.54):
@@ -100,26 +101,28 @@ class DrawLetters:
         ]
 
         return points
+    
 
-class TurtleManager(Node):
+class DrawerManager(Node):
     def __init__(self):
-        super().__init__("turtle_manager")
+        super().__init__("drawer_manager")
+        self.get_logger().info("Drawer manager created.")
+
+        self.spawner_pub = self.create_publisher(SpawnMsg, '/spawn', 10)
 
         self._action_client = ActionClient(self, GoTo, 'GoTo')
-
-        self.cmd_vel_pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
         
         self.nb_turtles = 1
 
         self.get_config_parameters()
 
-        self.letter_info = DrawLetters(self.letter_height, self.letter_width)
-        self.get_logger().info("Turtle manager created.")
+        self.letter_info = LetterManager(self.letter_height, self.letter_width)
 
-        self.trajectory_planner()
+        self.create_all_turtles()
+
 
     def get_config_parameters(self):
-        self.declare_parameter('word', "RO") 
+        self.declare_parameter('word', "ROBORESCUE") 
         self.declare_parameter('screen_color_limit', 5.0) 
         self.declare_parameter('letter_width', 1.0) 
         self.declare_parameter('letter_height', 3.0) 
@@ -140,19 +143,28 @@ class TurtleManager(Node):
         self.letter_offset_x = letter_offset[0]
         self.letter_offset_y = letter_offset[1]
 
+
     
     def create_all_turtles(self):
         """Create all the trutles."""
+        # Position of the first letter (turtle 1)
         initial_x = 2.0
         initial_y = 5.0
-        self.turtle_positions = []  # Para guardar posiciones iniciales de cada tortuga
+        self.turtle_positions = []  # Store the initial position of each turtle
 
-        for i, letter in enumerate(self.word):
-            turtle_name = f"turtle{self.nb_turtles + i}"
-            self.spawn_turtle_service(initial_x, initial_y, 0.0, turtle_name)
-            self.turtle_positions.append((letter, initial_x, initial_y, self.nb_turtles + i))
+        for i, letter in enumerate(self.word, start=1):
+            spawner_msg = SpawnMsg()
+            spawner_msg.turtle_id = self.nb_turtles 
+            spawner_msg.x = initial_x + self.letter_width + self.letter_offset_x 
+            spawner_msg.y = initial_y
+            spawner_msg.theta = 0.0
+
+            self.spawner_pub.publish(spawner_msg)
+            self.turtle_positions.append((letter, initial_x, initial_y, self.nb_turtles))
             initial_x += self.letter_width + self.letter_offset_x
             initial_y += self.letter_offset_y
+
+            self.nb_turtles += 1
 
     def trajectory_planner(self):
         """ Wrapper function to manage the turtle trajectory"""
@@ -227,21 +239,6 @@ class TurtleManager(Node):
         #self.get_logger().info(f'Current position: x={feedback.x:.2f}, y={feedback.y:.2f}')
 
     # ---------- SERVICES ---------
-    def spawn_turtle_service(self, x, y, theta, name):
-        client = self.create_client(Spawn, "/spawn")
-        while not client.wait_for_service(1.0):
-            self.get_logger().info("Waiting for /spawn service...")
-
-        req = Spawn.Request()
-        req.x = x
-        req.y = y
-        req.theta = theta
-        req.name = name
-        future = client.call_async(req)
-        rclpy.spin_until_future_complete(self, future)
-        if future.result():
-            self.get_logger().info(f"Spawned {future.result().name} at ({x},{y})")
-
     def pen_service(self, r, g, b, width, off, turtle_id):
         client = self.create_client(SetPen, f"/turtle{turtle_id}/set_pen")
         while not client.wait_for_service(1.0):
@@ -312,7 +309,7 @@ class TurtleManager(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = TurtleManager()
+    node = DrawerManager()
 
     try:
         rclpy.spin(node)

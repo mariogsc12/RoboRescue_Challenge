@@ -180,7 +180,7 @@ class GoToActionServer(Node):
 
 
         # Stop the turtle
-        self.cmd_vel_pub.publish(Twist())
+        publisher.publish(Twist())
 
         goal_handle.succeed()
         result = GoTo.Result()
