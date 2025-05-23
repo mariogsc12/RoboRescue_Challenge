@@ -1,6 +1,7 @@
 turtle_manager:
   ros__parameters:
-    word: "ROBO"
+    word_up: "ROBO"
+    word_down: "ROBO"
     screen_color_limit: 5.5
     letter_height: 3.0
     letter_with: 5.0

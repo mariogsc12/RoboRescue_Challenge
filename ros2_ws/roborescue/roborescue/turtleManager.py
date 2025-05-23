@@ -10,35 +10,49 @@ from functools import partial
 from roborescue.action import GoTo
 from rclpy.executors import ExternalShutdownException
 
+import time
 import random
 import math
 import sys
 
+DIRECTION = ["LEFT", "RIGHT"]
+DEFINED_LETTERS = ["R","O","B"]
 class DrawLetters:
+    """ Main class to manage the trajectory for drawing a letter. \n
+    The robot should start from the bottom right or bottom left, depending on the desired direction. """
+
+
     def __init__(self, length, width):
         self.length = length
         self.width = width
 
-    def letter_manager(self, letter_, origin_x, origin_y):
+    def letter_manager(self, letter_, origin_x, origin_y, direction):
+        """ Wrapper function to return a list of points to draw all the defined letters"""
+        if direction not in DIRECTION:
+            return
+        
         letter = letter_.upper()
+        
+        if letter not in DEFINED_LETTERS:
+            return
+        
         if letter == "R":
-            return self.draw_R(origin_x, origin_y)
+            return self.draw_R(origin_x, origin_y, direction)
         elif letter == "O":
-            return self.draw_O(origin_x, origin_y)
+            return self.draw_O(origin_x, origin_y, direction)
         elif letter == "B":
-            return self.draw_B(origin_x, origin_y)
+            return self.draw_B(origin_x, origin_y, direction)
         else:
             self.get_logger().error(f"The letter {letter} is not configured.")
             return
 
-    def draw_R(self, origin_x=5.54, origin_y=5.54):
+    def draw_R(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter R"""
         l = self.length
         w = self.width
         x0, y0 = origin_x, origin_y
 
-        points = [
-            (x0, y0),               # start point
+        points_botton_right = [
             (x0 - w/2, y0),
             (x0 - (2*w)/3, y0 + l / 2), # diagonal to halfway up the letter height
             (x0 - (2*w)/3, y0),         # vertical line down to the point at y=0 and x=width/3
@@ -48,57 +62,77 @@ class DrawLetters:
             (x0, y0 + l / 2),
             (x0 - w/2, y0 + l / 2),
             (x0, y0)
-
-            # //(x0, y0 + l),           # vertical line upward by letter height
-            # (x0 + w, y0 + l),       # horizontal line right by letter width
-            # (x0 + w, y0 + l / 2),   # downward line by half the letter height
-            # (x0 + w/2, y0 + l / 2), # horizontal line left to half the letter width
-            # (x0 + w, y0),           # diagonal to the point at y=0 and x=width
-            # (x0 + w / 2, y0),       # horizontal line to half the width
-            # (x0 + w/3, y0 + l / 2), # diagonal to halfway up the letter height
-            # (x0 + w/3, y0),         # vertical line down to the point at y=0 and x=width/3
-            # (x0, y0)                # horizontal line left back to the start point
         ]
 
-        return points
+        points_botton_left = [
+            (x0, y0 + l),           # vertical line upward by letter height
+            (x0 + w, y0 + l),       # horizontal line right by letter width
+            (x0 + w, y0 + l / 2),   # downward line by half the letter height
+            (x0 + w/2, y0 + l / 2), # horizontal line left to half the letter width
+            (x0 + w, y0),           # diagonal to the point at y=0 and x=width
+            (x0 + w / 2, y0),       # horizontal line to half the width
+            (x0 + w/3, y0 + l / 2), # diagonal to halfway up the letter height
+            (x0 + w/3, y0),         # vertical line down to the point at y=0 and x=width/3
+            (x0, y0)                # horizontal line left back to the start point
+        ]
 
-    def draw_O(self, origin_x=5.54, origin_y=5.54):
+        if direction == "RIGHT":
+            return points_botton_right
+        elif direction == "LEFT" :
+            return points_botton_left
+
+
+    def draw_O(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter O"""
         l = self.length
         w = self.width
         x0, y0 = origin_x, origin_y
 
-        points = [
-            (x0, y0),               # start point
+        points_botton_right = [
             (x0-w, y0),             # horizontal line left by letter width
             (x0-w, y0 + l),         # vertical line upward by letter height
             (x0, y0 + l),           # horizontal line right by letter width
             (x0, y0),               # vertical line downward by letter height
         ]
 
-        return points
+        points_botton_left = [
+            (x0, y0 + l),           # vertical line upward by letter height
+            (x0+w, y0 + l),         # horizontal line right by letter width
+            (x0+w, y0),             # vertical line downward by letter height
+            (x0, y0),               # horizontal line left by letter width
+        ]
 
-    def draw_B(self, origin_x=5.54, origin_y=5.54):
+        if direction == "RIGHT":
+            return points_botton_right
+        elif direction == "LEFT" :
+            return points_botton_left
+
+    def draw_B(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter B"""
         l = self.length
         w = self.width
         x0, y0 = origin_x, origin_y
 
-        points = [
-            (x0, y0),               # start point
+        points_botton_right = [
             (x0-w, y0),             # horizontal line left by letter width
             (x0-w, y0 + l),         # vertical line upward by letter height
             (x0, y0 + l),           # horizontal line right by letter width
             (x0-w/2, y0 + l / 2),   # diagonal line downward by half the letter height
             (x0, y0),               # diagonal line right back to the start point
-            # (x0, y0 + l),           # vertical line upward by letter height
-            # (x0 + w, y0 + l),       # horizontal line right by letter width
-            # (x0 + w/2, y0 + l/2),   # diagonal to the center point
-            # (x0 + w, y0),           # diagonal to the right down point
-            # (x0, y0)                # horizontal line left back to the start point
         ]
 
-        return points
+        points_botton_left = [
+            (x0, y0 + l),           # vertical line upward by letter height
+            (x0 + w, y0 + l),       # horizontal line right by letter width
+            (x0 + w/2, y0 + l/2),   # diagonal to the center point
+            (x0 + w, y0),           # diagonal to the right down point
+            (x0, y0)                # horizontal line left back to the start point
+        ]
+
+        if direction == "RIGHT":
+            return points_botton_right
+        elif direction == "LEFT" :
+            return points_botton_left
 
 class TurtleManager(Node):
     def __init__(self):
@@ -114,7 +148,8 @@ class TurtleManager(Node):
         self.trajectory_planner()
 
     def get_config_parameters(self):
-        self.declare_parameter('word', "RO") 
+        self.declare_parameter('word_up', "RO") 
+        self.declare_parameter('word_down', "RO") 
         self.declare_parameter('screen_color_limit', 5.0) 
         self.declare_parameter('letter_width', 1.0) 
         self.declare_parameter('letter_height', 3.0) 
@@ -123,7 +158,8 @@ class TurtleManager(Node):
         self.declare_parameter('line_width', 3) 
         self.declare_parameter('letter_offset', [0.25,0.0]) 
 
-        self.word = self.get_parameter('word').get_parameter_value().string_value
+        self.word_up = self.get_parameter('word_up').get_parameter_value().string_value
+        self.word_down = self.get_parameter('word_down').get_parameter_value().string_value
         self.screen_color_limit = self.get_parameter('screen_color_limit').get_parameter_value().double_value
         self.letter_width = self.get_parameter('letter_width').get_parameter_value().double_value
         self.letter_height = self.get_parameter('letter_height').get_parameter_value().double_value
@@ -139,21 +175,38 @@ class TurtleManager(Node):
     def trajectory_planner(self):
         """ Wrapper function to manage the turtle trajectory"""
         
-        initial_x = 2.0
-        initial_y = 5.0
+        initial_x_up = 2.0
+        initial_y_up = 5.0
 
-        for letter in self.word:
-            self.get_logger().info(f'--- Starting to draw {letter} at {initial_x,initial_y} ---')
-            self.teleport_absoulte_service(initial_x,initial_y,0.0)
-            waypoints = self.letter_info.letter_manager(letter,initial_x,initial_y)
+        initial_x_down = 8.0
+        initial_y_down = 2.0
+
+        for letter in self.word_up:
+            self.get_logger().info(f'--- Starting to draw {letter} at {initial_x_up,initial_y_up} ---')
+            self.teleport_absoulte_service(initial_x_up,initial_y_up,0.0)
+            waypoints = self.letter_info.letter_manager(letter,initial_x_up,initial_y_up, "RIGHT")
 
             # Loop to move the turtle to the waypoints of the letter (skip the first one to keep the "hide" line)
-            for wp in waypoints[1:]:
+            for wp in waypoints:
                 goal_future = self.send_goal(wp[0], wp[1], 0.0)
                 rclpy.spin_until_future_complete(self, goal_future)
 
-            initial_x = initial_x + self.letter_width + self.letter_offset_x
-            initial_y = initial_y + self.letter_offset_y
+            initial_x_up = initial_x_up + self.letter_width + self.letter_offset_x
+            initial_y_up = initial_y_up + self.letter_offset_y
+
+        for letter in self.word_down:
+            self.get_logger().info(f'--- Starting to draw {letter} at {initial_x_down,initial_y_down} ---')
+            self.teleport_absoulte_service(initial_x_down,initial_y_down,0.0)
+            time.sleep(1)
+            waypoints = self.letter_info.letter_manager(letter,initial_x_down,initial_y_down,"LEFT")
+
+            # Loop to move the turtle to the waypoints of the letter (skip the first one to keep the "hide" line)
+            for wp in waypoints:
+                goal_future = self.send_goal(wp[0], wp[1], 0.0)
+                rclpy.spin_until_future_complete(self, goal_future)
+
+            initial_x_down = initial_x_down - self.letter_width - self.letter_offset_x
+            initial_y_down = initial_y_down + self.letter_offset_y
 
     # -------- ACTIONS -------
     def send_goal(self, x, y, theta):
