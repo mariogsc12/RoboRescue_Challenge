@@ -66,7 +66,7 @@ class GoToActionServer(Node):
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
         # This server allows multiple goals in parallel
-        self.get_logger().info('Received goal request')
+        self.get_logger().info('Goal received')
         self.goal = goal_request
         return GoalResponse.ACCEPT
 

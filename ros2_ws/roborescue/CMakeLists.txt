@@ -13,14 +13,15 @@ find_package(geometry_msgs REQUIRED)
 find_package(turtlesim REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-
 install(
-  DIRECTORY launch config
+  DIRECTORY launch config 
   DESTINATION share/${PROJECT_NAME}
 )
 
 install(PROGRAMS 
-  ${PROJECT_NAME}/turtleManager.py
+  ${PROJECT_NAME}/utils.py
+  ${PROJECT_NAME}/letter_manager.py
+  ${PROJECT_NAME}/turtle_manager.py
   ${PROJECT_NAME}/goto_action_server.py
   DESTINATION lib/${PROJECT_NAME}
 )

@@ -1,14 +1,16 @@
 turtle_manager:
   ros__parameters:
-    word_up: "ROBO"
-    word_down: "ROBO"
-    screen_color_limit: 5.5
-    letter_height: 3.0
-    letter_with: 5.0
-    screen_color: [69, 86, 255]
-    line_default_color: [255,255,255]
-    line_widht: 3
-    letter_offset: [0.25, 0.0]
+    word_up: "b"
+    word_down: "b"
+    initial_pos_word_up: [2.0, 6.0]     # [x,y]
+    initial_pos_word_down: [8.9, 2.0]   # [x,y]
+  
+    letter_height: 2.5
+    letter_width: 1.5
+    letter_offset: [0.25, 0.0]          # [x,y] -> used to change the distance between letters
+    screen_color: [69, 86, 255]         # [r,g,b] -> used to hide the line during the "teleport"
+    line_default_color: [255,255,255]   # [r,g,b] -> drawing color
+    line_widht: 3                       # width of the line
 
 goto_action_server:
   ros__parameters:
