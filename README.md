@@ -100,6 +100,15 @@ Here are some example variations:
 
 3. **Increase X offset**  
    <img src="media/HIGH_X_OFFSET.png" alt="X Offset" width="255" />
+
+## ⚙️ Future Development
+
+- Add support for more letters and complex drawings.  
+- Implement parallel processing of letters using multiple turtles simultaneously to speed up drawing.    
+- Add customizable colors and styles per letter or word.  
+- Integrate advanced path planning to avoid overlaps and collisions between turtles and walls.  
+
+---
    
 ## 🙌 Acknowledgments
 
