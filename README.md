@@ -47,6 +47,10 @@ This allows for creative and flexible word rendering without needing to modify t
   The terminal displays each step of the process to improve clarity and user experience.
 
 ---
+   <p align="center">
+     <img src="media/rqt_graph.png" alt="rqt graph" width="355" />
+     <img src="media/terminal_feedback.png" alt="terminal feedback" width="355" />
+   </p>
 
 ## 🚀 How to Run the Project
 
