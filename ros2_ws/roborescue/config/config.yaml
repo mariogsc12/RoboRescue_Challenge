@@ -4,12 +4,15 @@ turtle_manager:
     word_down: "RESCUE"
     initial_pos_word_up: [2.0, 6.0]     # [x,y]
     initial_pos_word_down: [8.9, 2.0]   # [x,y]
+    word_line_red:   [0, 255]   # [max,min]
+    word_line_green: [0, 255]   # [max,min]
+    word_line_blue:  [0, 100]   # [max,min]
   
     letter_height: 2.5
     letter_width: 1.5
     letter_offset: [0.25, 0.0]          # [x,y] -> used to change the distance between letters
     screen_color: [69, 86, 255]         # [r,g,b] -> used to hide the line during the "teleport"
-    line_default_color: [255,255,255]   # [r,g,b] -> drawing color
+    line_default_color: [255,255,255]   # [r,g,b] -> line drawing color
     line_widht: 3                       # width of the line
 
 goto_action_server:

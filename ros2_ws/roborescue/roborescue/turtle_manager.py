@@ -42,6 +42,9 @@ class TurtleManager(Node):
         self.declare_parameter('word_down', "R") 
         self.declare_parameter('initial_pos_word_up', [2.0,6.0]) 
         self.declare_parameter('initial_pos_word_down', [8.9,1.5]) 
+        self.declare_parameter('word_line_red', [0, 255]) 
+        self.declare_parameter('word_line_green', [0, 255]) 
+        self.declare_parameter('word_line_blue', [0, 255]) 
         self.declare_parameter('letter_width', 1.0) 
         self.declare_parameter('letter_height', 3.0) 
         self.declare_parameter('screen_color', [0,0,255]) 
@@ -53,6 +56,9 @@ class TurtleManager(Node):
         self.word_down = self.get_parameter('word_down').get_parameter_value().string_value
         self.initial_pos_word_up = self.get_parameter('initial_pos_word_up').get_parameter_value().double_array_value
         self.initial_pos_word_down = self.get_parameter('initial_pos_word_down').get_parameter_value().double_array_value
+        self.word_line_red = self.get_parameter('word_line_red').get_parameter_value().integer_array_value
+        self.word_line_green = self.get_parameter('word_line_green').get_parameter_value().integer_array_value
+        self.word_line_blue = self.get_parameter('word_line_blue').get_parameter_value().integer_array_value
         self.letter_width = self.get_parameter('letter_width').get_parameter_value().double_value
         self.letter_height = self.get_parameter('letter_height').get_parameter_value().double_value
         self.screen_color = self.get_parameter('screen_color').get_parameter_value().integer_array_value
@@ -100,6 +106,10 @@ class TurtleManager(Node):
             for letter in word:
                 self.get_logger().info(f'\n \n --- Starting to draw {letter} at {round(initial_x,2),round(initial_y,2)} --- \n \n')
                 self.teleport_absoulte_service(initial_x,initial_y,0.0)
+                self.pen_service(random.randint(self.word_line_red[0],self.word_line_red[1]),
+                                 random.randint(self.word_line_green[0], self.word_line_green[1]),
+                                 random.randint(self.word_line_blue[0], self.word_line_blue[1]))
+                
                 waypoints_up = self.letter_manager.manager(letter,initial_x,initial_y, direction)
 
                 # Loop to move the turtle to the waypoints of the letter 
@@ -115,8 +125,8 @@ class TurtleManager(Node):
                     initial_x = initial_x + self.letter_width + self.letter_offset_x
                     initial_y = initial_y + self.letter_offset_y
                 elif direction == "LEFT":
-                    initial_x_down = initial_x_down - self.letter_width - self.letter_offset_x
-                    initial_y_down = initial_y_down + self.letter_offset_y
+                    initial_x = initial_x - self.letter_width - self.letter_offset_x
+                    initial_y = initial_y + self.letter_offset_y
         else:
             self.get_logger().info(f'\n \n --- Word not configured. Skipping --- \n \n')
 
@@ -186,7 +196,10 @@ class TurtleManager(Node):
         if future.result():
             self.get_logger().info(f"Spawned {future.result().name} at ({x},{y})")
 
-    def pen_service(self, r, g, b, width, off):
+    def pen_service(self, r, g, b, width=None, off=0):
+        if width == None:
+            width = self.line_width
+
         client = self.create_client(SetPen, "/turtle1/set_pen")
         while not client.wait_for_service(1.0):
             self.get_logger().info("Waiting for service set_pen...")
