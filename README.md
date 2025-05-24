@@ -78,16 +78,25 @@ ros2 launch roborescue launch.launch.py
 
 
 ## 🎥 Demo Video
-...
+
+[🚀 RoboRescue Challenge Demo](https://youtu.be/kbwnijjScJo)
 
 ## 🎨 Visual Variations
 You can easily change the appearance of the output by modifying parameters in the YAML config file.
 
 Here are some example variations:
-1. Add y offset to draw in diagonal
-2. Use fixed color
-3. Increase x offset
+1. **Add Y offset to draw in diagonal**  
+   <img src="media/ROBORESCUE_DIAGONAL.png" alt="Diagonal" width="255" />
 
+2. **Use fixed color**  
+   <p align="left">
+     <img src="media/FIXED_COLOR_1.png" alt="Fixed Color 1" width="255" />
+     <img src="media/FIXED_COLOR_2.png" alt="Fixed Color 2" width="255" />
+   </p>
+
+3. **Increase X offset**  
+   <img src="media/HIGH_X_OFFSET.png" alt="X Offset" width="255" />
+   
 ## 🙌 Acknowledgments
 
 Thanks to the RoboRescue UMA team for organizing this fun and educational challenge!
