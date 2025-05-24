@@ -99,35 +99,8 @@ class TurtleManager(Node):
     def draw_word(self, word, initial_x, initial_y, direction):
         """ Logic to draw a word using the initial position and the direction of the turtle """
 
-        direction = direction.upper()
-        if direction not in DIRECTION:
-            self.get_logger().info(f'\n \n --- Received direction {direction} is not configured. Please use {DIRECTION} --- \n \n')  
+        if not self.check_configuration(word, initial_x, initial_y, direction):
             return
-        
-        if direction == "RIGHT":
-            if initial_x + (self.letter_width + self.letter_offset_x) * (len(word)-1) > SCREEN_SIZE:
-                self.get_logger().info(
-                    f"The configured parameters are invalid: the word '{word}' exceeds the screen width.")
-                return
-            if initial_y + self.letter_height + self.letter_offset_y * (len(word)-1) > SCREEN_SIZE:
-                self.get_logger().info(
-                    f"The configured parameters are invalid: the word '{word}' exceeds the screen height.")
-                return
-
-        elif direction == "LEFT":
-            if initial_x - (self.letter_width + self.letter_offset_x) * (len(word)-1) < 0:
-                self.get_logger().info(
-                    f"The configured parameters are invalid: the word '{word}' exceeds the screen width on the left.")
-                return
-            if initial_y + self.letter_height + self.letter_offset_y * (len(word)-1) < SCREEN_SIZE / 2:
-                self.get_logger().info(
-                    f"The configured parameters are invalid: the word '{word}' height is too low (below mid screen).")
-                return
-            if initial_y + self.letter_offset_y * (len(word)-1) < 0:
-                self.get_logger().info(
-                    f"The configured parameters are invalid: the word '{word}' exceeds the screen height (above).")
-                return
-        
         
         if word:
             self.get_logger().info(f'\n \n --- Starting to draw {word} --- \n \n')
@@ -306,6 +279,47 @@ class TurtleManager(Node):
             value = max
         elif value < min:
             value = min
+
+    def check_configuration(self, word, initial_x, initial_y, direction):
+
+        direction = direction.upper()
+        if direction not in DIRECTION:
+            self.get_logger().info(f'\n \n --- Received direction {direction} is not configured. Please use {DIRECTION} --- \n \n')  
+            return False
+        
+        if direction == "RIGHT":
+            if initial_x + (self.letter_width + self.letter_offset_x) * (len(word)-1) > SCREEN_SIZE:
+                self.get_logger().info(
+                    f"The configured parameters are invalid: the word '{word}' exceeds the screen width.")
+                return False
+            if self.letter_offset_y > 0:
+                if initial_y + self.letter_height + self.letter_offset_y * (len(word)-1) > SCREEN_SIZE:
+                    self.get_logger().info(
+                        f"The configured parameters are invalid: the word '{word}' exceeds the screen height.")
+                    return False
+            else:
+                if initial_y + self.letter_offset_y * (len(word)-1) < SCREEN_SIZE/2:
+                    self.get_logger().info(
+                        f"The configured parameters are invalid: the word '{word}' height is too low (above mid screen).")
+                    return False
+
+        elif direction == "LEFT":
+            if initial_x - (self.letter_width + self.letter_offset_x) * (len(word)-1) < 0:
+                self.get_logger().info(
+                    f"The configured parameters are invalid: the word '{word}' exceeds the screen width on the left.")
+                return False
+            if self.letter_offset_y > 0:
+                if initial_y + self.letter_height + self.letter_offset_y * (len(word)-1) > SCREEN_SIZE / 2:
+                    self.get_logger().info(
+                        f"The configured parameters are invalid: the word '{word}' height is too low (below mid screen).")
+                    return False
+            else:
+                if initial_y + self.letter_offset_y * (len(word)-1) < 0:
+                    self.get_logger().info(
+                        f"The configured parameters are invalid: the word '{word}' exceeds the screen height (above).")
+                    return False
+                
+        return True
 
 
 

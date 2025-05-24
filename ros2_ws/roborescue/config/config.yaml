@@ -1,16 +1,16 @@
 turtle_manager:
   ros__parameters:
-    word_up: "RO"                       # (string)
+    word_up: "ROBO"                     # (string)
     word_down: "RESCUE"                 # (string)
-    initial_pos_word_up: [2.0, 5.0]     # (double) -> [x,y]
-    initial_pos_word_down: [8.9, 0.5]   # (double) -> [x,y]
-    word_line_red:   [255, 255]         # (double) -> [max,min] -> use the same value for fixed color
-    word_line_green: [0, 0]             # (double) -> [max,min] -> use the same value for fixed color
-    word_line_blue:  [0, 0]             # (double) -> [max,min] -> use the same value for fixed color
+    initial_pos_word_up: [2.0, 6.0]     # (double) -> [x,y]
+    initial_pos_word_down: [8.9, 2.0]   # (double) -> [x,y]
+    word_line_red:   [0, 255]           # (double) -> [max,min] -> use the same value for fixed color
+    word_line_green: [0, 255]           # (double) -> [max,min] -> use the same value for fixed color
+    word_line_blue:  [0, 100]           # (double) -> [max,min] -> use the same value for fixed color
   
     letter_height: 2.5                  # (double)
     letter_width: 1.5                   # (double)
-    letter_offset: [5.0, 0.0]           # (double)  -> [x,y] -> use to change the distance between letters
+    letter_offset: [0.25, 0.0]          # (double)  -> [x,y] -> use to change the distance between letters
     screen_color: [69, 86, 255]         # (integer) -> [r,g,b] -> used to hide the line during the "teleport"
     line_default_color: [255,255,255]   # (integer) -> [r,g,b] -> default line drawing color 
     line_widht: 3                       # (integer) 
