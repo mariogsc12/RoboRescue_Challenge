@@ -58,8 +58,14 @@ cd ~/RoboRescue_Challenge/ros2_ws/
 colcon build
 source install/setup.bash
 ```
+### 2. (Optional) Change the configuration:
+```bash
+cd ~/RoboRescue_Challenge/ros2_ws/
+nano roborescue/config/config.yaml
+```
+💡 Tip: You can use your favorite editor instead of nano (vim, vscode, gedit...).
 
-### 2. Run the project using the launch script:
+### 3. Run the project using the launch script:
 ```bash
 ros2 launch roborescue launch.launch.py
 ```
