@@ -66,8 +66,24 @@ class TurtleManager(Node):
         self.line_width = self.get_parameter('line_width').get_parameter_value().integer_value
         letter_offset = self.get_parameter('letter_offset').get_parameter_value().double_array_value
 
+
+        colors = [self.word_line_red, self.word_line_green, self.word_line_blue, self.line_default_color, self.screen_color]
+
+        for color in colors:
+            for i in range(len(color)):
+                self.constrain(color[i], 0, 255)
+
+        pos_to_check = [self.initial_pos_word_up, self.initial_pos_word_down, letter_offset]
+        for pos in pos_to_check:
+            for i in range(len(pos)):
+                self.constrain(pos[i], 0, SCREEN_SIZE)
+
         self.letter_offset_x = letter_offset[0]
         self.letter_offset_y = letter_offset[1]
+
+        if self.initial_pos_word_up[1] <= self.initial_pos_word_down[1]:
+            self.get_logger().info(f'\n \n --- Received word up position_y {self.initial_pos_word_up[1]} is greater than word down {self.initial_pos_word_down[1]} --- \n \n')  
+
 
     
     def trajectory_planner(self):
@@ -78,8 +94,6 @@ class TurtleManager(Node):
 
         self.draw_word(self.word_up, initial_x_up, initial_y_up, "RIGHT")
         self.draw_word(self.word_down, initial_x_down, initial_y_down, "LEFT")
-
-        self.get_logger().info(f'{FINAL_MESSAGE}')
         
     
     def draw_word(self, word, initial_x, initial_y, direction):
@@ -91,13 +105,29 @@ class TurtleManager(Node):
             return
         
         if direction == "RIGHT":
-            if initial_x + self.letter_width * len(word) > SCREEN_SIZE:
-                self.get_logger().info(f'\n \n --- The configurated parameters are not valid. The word width is greater than screen --- \n \n')
+            if initial_x + (self.letter_width + self.letter_offset_x) * (len(word)-1) > SCREEN_SIZE:
+                self.get_logger().info(
+                    f"The configured parameters are invalid: the word '{word}' exceeds the screen width.")
                 return
+            if initial_y + self.letter_height + self.letter_offset_y * (len(word)-1) > SCREEN_SIZE:
+                self.get_logger().info(
+                    f"The configured parameters are invalid: the word '{word}' exceeds the screen height.")
+                return
+
         elif direction == "LEFT":
-            if initial_x - self.letter_width * len(word) > SCREEN_SIZE:
-                self.get_logger().info(f'\n \n --- The configurated parameters are not valid. The word width is greater than screen --- \n \n')
+            if initial_x - (self.letter_width + self.letter_offset_x) * (len(word)-1) < 0:
+                self.get_logger().info(
+                    f"The configured parameters are invalid: the word '{word}' exceeds the screen width on the left.")
                 return
+            if initial_y + self.letter_height + self.letter_offset_y * (len(word)-1) < SCREEN_SIZE / 2:
+                self.get_logger().info(
+                    f"The configured parameters are invalid: the word '{word}' height is too low (below mid screen).")
+                return
+            if initial_y + self.letter_offset_y * (len(word)-1) < 0:
+                self.get_logger().info(
+                    f"The configured parameters are invalid: the word '{word}' exceeds the screen height (above).")
+                return
+        
         
         if word:
             self.get_logger().info(f'\n \n --- Starting to draw {word} --- \n \n')
@@ -269,7 +299,13 @@ class TurtleManager(Node):
             response = future.result()
         except Exception as e:
             self.get_logger().error("Service call failed: %r" %(e,))
-
+    
+    # ---------- AUXILIAR FUNCTIONS ---------
+    def constrain(self, value, min, max):
+        if value > max:
+            value = max
+        elif value < min:
+            value = min
 
 
 
