@@ -86,15 +86,17 @@ class TurtleManager(Node):
         
         if direction == "RIGHT":
             if initial_x + self.letter_width * len(word) > SCREEN_SIZE:
-                self.get_logger().info(f'\n \n --- The configurated parameters are not valid. The word width is {self.letter_width * len(word)} --- \n \n')
+                self.get_logger().info(f'\n \n --- The configurated parameters are not valid. The word width is greater than screen --- \n \n')
                 return
         elif direction == "LEFT":
             if initial_x - self.letter_width * len(word) > SCREEN_SIZE:
-                self.get_logger().info(f'\n \n --- The configurated parameters are not valid. The word width is {self.letter_width * len(word)} --- \n \n')
+                self.get_logger().info(f'\n \n --- The configurated parameters are not valid. The word width is greater than screen --- \n \n')
                 return
         
-        if self.word:
+        if word:
             self.get_logger().info(f'\n \n --- Starting to draw {word} --- \n \n')
+            if direction == "LEFT":
+                word = reversed(word)
             for letter in word:
                 self.get_logger().info(f'\n \n --- Starting to draw {letter} at {round(initial_x,2),round(initial_y,2)} --- \n \n')
                 self.teleport_absoulte_service(initial_x,initial_y,0.0)
