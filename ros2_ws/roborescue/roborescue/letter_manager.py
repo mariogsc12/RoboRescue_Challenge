@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import math
 DIRECTION = ["LEFT", "RIGHT"]
 DEFINED_LETTERS = ["R","O","B"]
 
@@ -38,7 +38,20 @@ class LetterManager:
             return self.draw_I(origin_x, origin_y, direction)
         else:
             return None
-
+        
+    def robot_manager(self, letter_, origin_x, origin_y):
+        """ Wrapper function to return a list of points to draw the robot and the antenna circle"""
+        letter = letter_.upper()
+        
+        if letter == "X":
+            return self.draw_MOUTH(origin_x, origin_y)
+        elif letter == "Y":
+            return self.draw_EYE(origin_x, origin_y)
+        elif letter == "Z":
+            return self.draw_ROBOT(origin_x, origin_y)
+        else:
+            return None
+        
     def draw_R(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter R"""
         l = self.length
@@ -275,7 +288,95 @@ class LetterManager:
         ]
 
         return self.choise_direction(points_bottom_right, points_bottom_left, direction)
+    
+    def draw_MOUTH(self, origin_x=5.54, origin_y=5.54):
+        """Returns a list of points (x,y) to draw an eye (circle starting from bottom, CCW)"""
+        l = self.length
+        w = self.width
+        x0, y0 = origin_x, origin_y
+        
+        points = [
+            (x0, y0),               # start point
+            (x0 - w, y0),        
+            (x0 - w, y0 - l/6),  
+            (x0, y0 - l/6),   
+            (x0, y0),
+        ]
 
+        return points
+
+    def draw_EYE(self, origin_x=5.54, origin_y=5.54):
+        """Returns a list of points (x,y) to draw an eye (circle starting from bottom, CCW)"""
+        l = self.length
+        w = self.width
+        x0, y0 = origin_x, origin_y
+
+        points = [
+            (x0, y0),               # start point
+            (x0 + w/2, y0),        
+            (x0 + w/2, y0 + l/6),  
+            (x0, y0 + l/6),   
+            (x0, y0),
+        ]
+
+        return points
+
+    def draw_ROBOT(self, origin_x=5.54, origin_y=5.54):
+        """ Returns a list of points (x,y) to draw the robot and the antenna circle """
+
+        l = self.length
+        w = self.width
+        x0, y0 = origin_x, origin_y
+
+        points = [
+            ##OREJA IZQUIERDA
+            (x0, y0),               # start point
+            (x0, y0 + l / 6),
+            (x0, y0 - l / 6),
+            (x0, y0),
+            (x0 + w/3, y0),
+            ##CABEZON PARTE SUPERIOR
+            (x0 + w/3, y0 + l/2),
+            (x0 + (w), y0 + l/2),
+            (x0 + (w), y0 + l/1.25),
+        ]
+        # CÍRCULO DE LA ANTENA
+        cx = x0 + w
+        cy = y0 + l/1.25
+        r = w / 6
+        segments = 12  # más segmentos = círculo más preciso
+
+        # vuelta completa)
+        start_angle = 3 * math.pi / 2
+        end_angle = start_angle + 2 * math.pi
+
+        circle = []
+        for i in range(segments):
+            angle = start_angle + (2 * math.pi * i / segments)
+            x = cx + r * math.cos(angle)
+            y = cy + r * math.sin(angle)
+            circle.append((x, y))
+        circle.append(circle[0])  # cerrar el círculo
+
+        points.extend(circle)
+        # Continuación del dibujo
+        points += [
+            (x0 + (w), y0 + l/2),
+            (x0 + (w*(5/3)), y0 + l/2),
+            (x0 + (w*(5/3)), y0),
+            #OREJA DERECHA
+            (x0 + (w*(6/3)), y0),
+            (x0 + (w*(6/3)), y0 + l / 6),
+            (x0 + (w*(6/3)), y0 - l / 6),
+            (x0 + (w*(6/3)), y0),
+            (x0 + (w*(5/3)), y0),
+            #Cabeza parte inferior
+            (x0 + (w*(5/3)), y0 - l/2),
+            (x0 + w/3, y0 - l/2),
+            (x0 + w/3, y0),
+        ]
+
+        return points   
         
     def choise_direction(self, points_bottom_right, points_bottom_left, direction):
         if direction == "RIGHT":
