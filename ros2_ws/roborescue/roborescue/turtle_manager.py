@@ -40,8 +40,10 @@ class TurtleManager(Node):
     def get_config_parameters(self):
         self.declare_parameter('word_up', "R") 
         self.declare_parameter('word_down', "R") 
+        self.declare_parameter('robot', True)
         self.declare_parameter('initial_pos_word_up', [2.0,6.0]) 
         self.declare_parameter('initial_pos_word_down', [8.9,1.5]) 
+        self.declare_parameter('initial_pos_robot', [7.5, 5.5])
         self.declare_parameter('word_line_red', [0, 255]) 
         self.declare_parameter('word_line_green', [0, 255]) 
         self.declare_parameter('word_line_blue', [0, 255]) 
@@ -54,8 +56,10 @@ class TurtleManager(Node):
 
         self.word_up = self.get_parameter('word_up').get_parameter_value().string_value
         self.word_down = self.get_parameter('word_down').get_parameter_value().string_value
+        self.robot = self.get_parameter('robot').get_parameter_value().bool_value
         self.initial_pos_word_up = self.get_parameter('initial_pos_word_up').get_parameter_value().double_array_value
         self.initial_pos_word_down = self.get_parameter('initial_pos_word_down').get_parameter_value().double_array_value
+        self.initial_pos_robot = self.get_parameter('initial_pos_robot').get_parameter_value().double_array_value
         self.word_line_red = self.get_parameter('word_line_red').get_parameter_value().integer_array_value
         self.word_line_green = self.get_parameter('word_line_green').get_parameter_value().integer_array_value
         self.word_line_blue = self.get_parameter('word_line_blue').get_parameter_value().integer_array_value
@@ -91,11 +95,44 @@ class TurtleManager(Node):
         
         initial_x_up, initial_y_up = self.initial_pos_word_up
         initial_x_down, initial_y_down = self.initial_pos_word_down
+        initial_xrobot, initial_y_robot = self.initial_pos_robot
 
+        self.draw_robot(self.robot, initial_xrobot, initial_y_robot)
         self.draw_word(self.word_up, initial_x_up, initial_y_up, "RIGHT")
         self.draw_word(self.word_down, initial_x_down, initial_y_down, "LEFT")
         
-    
+    def draw_robot(self, robot, initial_x, initial_y):
+        "Logic to draw a robot shilouette whether you want to draw it or not"
+        letter_array = ["X","Y","Y","Z"]
+        eye_count = 0
+        if not robot:
+            self.get_logger().info(f'\n \n --- You dont want the robot drawing :_( . Skipping --- \n \n')
+            return
+        if robot:
+            for letter in letter_array:
+                if letter=="X":
+                    self.teleport_absoulte_service(initial_x,initial_y,0.0)
+                elif letter == "Y" and eye_count == 0:
+                    self.get_logger().info("Teleporting up for first eye")
+                    self.teleport_absoulte_service(initial_x, initial_y, math.pi/2)
+                    eye_count = 1
+                elif letter == "Y" and eye_count == 1:
+                    self.get_logger().info("Teleporting left for second eye")
+                    self.teleport_absoulte_service(initial_x, initial_y + 0.75, math.pi)
+                elif letter == "Z":
+                    self.get_logger().info("Teleporting for face")
+                    elf.teleport_absoulte_service(initial_x, initial_y, math.pi/2)
+                waypoints_up = self.letter_manager.robot_manager(letter, initial_x, initial_y)
+                if waypoints_up is None:
+                    self.get_logger().warn(f"Letter {letter} is not configured. Skipping")
+                    continue
+                for wp_up in waypoints_up:
+                    goal_future = self.send_goal(wp_up[0], wp_up[1], 0.0)
+                    rclpy.spin_until_future_complete(self, goal_future)
+        else:
+            self.get_logger().info(f'\n \n --- Robot not configured. Skipping --- \n \n')
+
+                
     def draw_word(self, word, initial_x, initial_y, direction):
         """ Logic to draw a word using the initial position and the direction of the turtle """
 
@@ -236,7 +273,7 @@ class TurtleManager(Node):
         request.linear = linear
         request.angular = angular
 
-        future = client.call(request)
+        future = client.call_async(request)
         rclpy.spin_until_future_complete(self, future)
 
         # Change the color to the default line color to hide the line
