@@ -3,9 +3,9 @@ turtle_manager:
     word_up: "ROBO"                     # (string)
     word_down: "RESCUE"                 # (string)
     draw_robot: True	          		    # (bool) -> use to draw a robot
-    initial_pos_word_up: [1.75, 7.0]     # (double) -> [x,y]
+    initial_pos_word_up: [1.75, 6.0]     # (double) -> [x,y]
     initial_pos_word_down: [8.9, 2.0]   # (double) -> [x,y]
-    initial_pos_robot: [9.85, 7.5]	    # (double) -> [x,y]
+    initial_pos_robot: [9.85, 7.35]	    # (double) -> [x,y]
     word_line_red:   [0, 255]           # (double) -> [max,min] -> use the same value for fixed color
     word_line_green: [0, 255]           # (double) -> [max,min] -> use the same value for fixed color
     word_line_blue:  [0, 100]           # (double) -> [max,min] -> use the same value for fixed color

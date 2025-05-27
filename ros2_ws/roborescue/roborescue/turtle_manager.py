@@ -97,8 +97,6 @@ class TurtleManager(Node):
         initial_x_down, initial_y_down = self.initial_pos_word_down
         initial_x_robot, initial_y_robot = self.initial_pos_robot
 
-
-        self.draw_robot(self.robot, initial_xrobot, initial_y_robot)
         self.draw_word(self.word_up, initial_x_up, initial_y_up, "RIGHT")
 
         if initial_x_up + self.letter_width - 2.15 > SCREEN_SIZE or initial_y_up + self.letter_height > SCREEN_SIZE:
