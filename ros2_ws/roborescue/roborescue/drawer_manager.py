@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import math
 DIRECTION = ["LEFT", "RIGHT"]
-DEFINED_LETTERS = ["R","O","B"]
+DEFINED_LETTERS = ["R","O","B","R","S","C","U","I"]
 
 class DrawerManager:
     """ Main class to manage the trajectory for drawing a letter or an object. \n
     The turtle should start from the bottom right or bottom left, depending on the desired direction. """
 
 
-    def __init__(self, length, width):
-        self.length = length
+    def __init__(self, height, width):
+        self.height = height
         self.width = width
 
     def manager(self, letter_, origin_x, origin_y, direction):
@@ -54,7 +54,7 @@ class DrawerManager:
         
     def draw_R(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter R"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -87,7 +87,7 @@ class DrawerManager:
 
     def draw_O(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter O"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -109,7 +109,7 @@ class DrawerManager:
 
     def draw_B(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter B"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -137,7 +137,7 @@ class DrawerManager:
 
     def draw_S(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """Returns a list of points (x, y) to draw the letter S"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -171,7 +171,7 @@ class DrawerManager:
         
     def draw_C(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """Returns a list of points (x, y) to draw the letter C"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -201,7 +201,7 @@ class DrawerManager:
         
     def draw_U(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """Returns a list of points (x, y) to draw the letter U"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -231,7 +231,7 @@ class DrawerManager:
 
     def draw_E(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """Returns a list of points (x, y) to draw the letter E"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -265,7 +265,7 @@ class DrawerManager:
     
     def draw_I(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter I """
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -291,7 +291,7 @@ class DrawerManager:
     
     def draw_MOUTH(self, origin_x=5.54, origin_y=5.54):
         """Returns a list of points (x,y) to draw an eye (circle starting from bottom, CCW)"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
         
@@ -307,7 +307,7 @@ class DrawerManager:
 
     def draw_EYE(self, origin_x=5.54, origin_y=5.54):
         """Returns a list of points (x,y) to draw an eye (circle starting from bottom, CCW)"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -324,7 +324,7 @@ class DrawerManager:
     def draw_ROBOT(self, origin_x=5.54, origin_y=5.54):
         """ Returns a list of points (x,y) to draw the robot and the antenna circle """
 
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
