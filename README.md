@@ -46,6 +46,8 @@ This allows for creative and flexible word rendering without needing to modify t
 - ✅ **Real-time feedback in the terminal**  
   The terminal displays each step of the process to improve clarity and user experience.
 
+- ✅ **Custom drawings**  
+  In the configuration file, the user has the option to draw a robot by enabling the `draw_robot` setting.
 ---
    <p align="center">
      <img src="media/rqt_graph.png" alt="rqt graph" width="355" />
@@ -83,7 +85,9 @@ ros2 launch roborescue launch.launch.py
 
 ## 🎥 Demo Video
 
-[🚀 RoboRescue Challenge Demo](https://youtu.be/kbwnijjScJo)
+[🚀 RoboRescue Challenge Demo](https://youtu.be/XpB3d0KuchI)
+
+<img src="media/ROBORESCUE_FINAL_EXAMPLE.png" alt="Final example" width="255" />
 
 ## 🎨 Visual Variations
 You can easily change the appearance of the output by modifying parameters in the YAML config file.
@@ -101,15 +105,21 @@ Here are some example variations:
 3. **Increase X offset**  
    <img src="media/HIGH_X_OFFSET.png" alt="X Offset" width="255" />
 
+4. **Draw only a robot**
+   
+   <img src="media/ROBORESCUE_ONLY_ROBOT.png" alt="only robot" width="255" />
+
+5. **Change the words**
+   
+   <img src="media/ROBORESCUE_CHANGE_WORDS.png" alt="change words" width="255" />
+
 ## ⚙️ Future Development
 
 - Add support for more letters and complex drawings.  
 - Implement parallel processing of letters using multiple turtles simultaneously to speed up drawing.    
 - Add customizable colors and styles per letter or word.  
 - Integrate advanced path planning to avoid overlaps and collisions between turtles and walls.  
-- Additionally, there are two different branches available.
-    The first one, `draw_robot`, is used to implement the logic for drawing a robot.
-    The second one, `different_turtles`, is used to make the changes necessary to draw a word using different turtles moving in parallel.
+- Additionally, there one branch available `different_turtles`, which is used to make the changes necessary to draw a word using different turtles moving in parallel.
 ---
    
 ## 🙌 Acknowledgments
