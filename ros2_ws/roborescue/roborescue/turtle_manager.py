@@ -9,7 +9,7 @@ from turtlesim.srv import SetPen, TeleportAbsolute, TeleportRelative, Spawn
 from functools import partial
 from roborescue.action import GoTo
 from rclpy.executors import ExternalShutdownException
-from letter_manager import LetterManager, DIRECTION
+from drawer_manager import DrawerManager, DIRECTION
 from utils import *
 
 import time
@@ -29,7 +29,7 @@ class TurtleManager(Node):
 
         self.get_config_parameters()
 
-        self.letter_manager = LetterManager(self.letter_height, self.letter_width)
+        self.drawer_manager = DrawerManager(self.letter_height, self.letter_width)
         self.get_logger().info("Turtle manager created.")
 
         self.trajectory_planner()
@@ -40,10 +40,10 @@ class TurtleManager(Node):
     def get_config_parameters(self):
         self.declare_parameter('word_up', "R") 
         self.declare_parameter('word_down', "R") 
-        self.declare_parameter('robot', True)
+        self.declare_parameter('draw_robot', True)
         self.declare_parameter('initial_pos_word_up', [2.0,6.0]) 
         self.declare_parameter('initial_pos_word_down', [8.9,1.5]) 
-        self.declare_parameter('initial_pos_robot', [7.5, 5.5])
+        self.declare_parameter('initial_pos_robot', [9.75, 6.5])
         self.declare_parameter('word_line_red', [0, 255]) 
         self.declare_parameter('word_line_green', [0, 255]) 
         self.declare_parameter('word_line_blue', [0, 255]) 
@@ -56,7 +56,7 @@ class TurtleManager(Node):
 
         self.word_up = self.get_parameter('word_up').get_parameter_value().string_value
         self.word_down = self.get_parameter('word_down').get_parameter_value().string_value
-        self.robot = self.get_parameter('robot').get_parameter_value().bool_value
+        self.draw_robot_config = self.get_parameter('draw_robot').get_parameter_value().bool_value
         self.initial_pos_word_up = self.get_parameter('initial_pos_word_up').get_parameter_value().double_array_value
         self.initial_pos_word_down = self.get_parameter('initial_pos_word_down').get_parameter_value().double_array_value
         self.initial_pos_robot = self.get_parameter('initial_pos_robot').get_parameter_value().double_array_value
@@ -86,7 +86,7 @@ class TurtleManager(Node):
         self.letter_offset_y = letter_offset[1]
 
         if self.initial_pos_word_up[1] <= self.initial_pos_word_down[1]:
-            self.get_logger().info(f'\n \n --- Received word up position_y {self.initial_pos_word_up[1]} is greater than word down {self.initial_pos_word_down[1]} --- \n \n')  
+            self.get_logger().warning(f'\n \n --- Received word up position_y {self.initial_pos_word_up[1]} is greater than word down {self.initial_pos_word_down[1]} --- \n \n')  
 
 
     
@@ -95,42 +95,66 @@ class TurtleManager(Node):
         
         initial_x_up, initial_y_up = self.initial_pos_word_up
         initial_x_down, initial_y_down = self.initial_pos_word_down
-        initial_xrobot, initial_y_robot = self.initial_pos_robot
+        initial_x_robot, initial_y_robot = self.initial_pos_robot
+
 
         self.draw_robot(self.robot, initial_xrobot, initial_y_robot)
         self.draw_word(self.word_up, initial_x_up, initial_y_up, "RIGHT")
+
+        if initial_x_up + self.letter_width - 2.15 > SCREEN_SIZE or initial_y_up + self.letter_height > SCREEN_SIZE:
+            self.get_logger().warning(f"The configured parameters are invalid: the robot initial position '{initial_x_robot},{initial_y_robot}' exceeds the screen width.")
+        else:
+            self.draw_robot(initial_x_robot, initial_y_robot)
+
         self.draw_word(self.word_down, initial_x_down, initial_y_down, "LEFT")
         
-    def draw_robot(self, robot, initial_x, initial_y):
+
+
+    def draw_robot(self, initial_x, initial_y):
         "Logic to draw a robot shilouette whether you want to draw it or not"
-        letter_array = ["X","Y","Y","Z"]
+        robot_parts = ["MOUTH", "EYE", "EYE", "ROBOT"]
         eye_count = 0
-        if not robot:
-            self.get_logger().info(f'\n \n --- You dont want the robot drawing :_( . Skipping --- \n \n')
+
+        if not self.draw_robot_config:
+            self.get_logger().info(f'\n \n --- Robot not configured.  :''( . Skipping --- \n \n')
             return
-        if robot:
-            for letter in letter_array:
-                if letter=="X":
-                    self.teleport_absoulte_service(initial_x,initial_y,0.0)
-                elif letter == "Y" and eye_count == 0:
-                    self.get_logger().info("Teleporting up for first eye")
-                    self.teleport_absoulte_service(initial_x, initial_y, math.pi/2)
-                    eye_count = 1
-                elif letter == "Y" and eye_count == 1:
-                    self.get_logger().info("Teleporting left for second eye")
-                    self.teleport_absoulte_service(initial_x, initial_y + 0.75, math.pi)
-                elif letter == "Z":
-                    self.get_logger().info("Teleporting for face")
-                    elf.teleport_absoulte_service(initial_x, initial_y, math.pi/2)
-                waypoints_up = self.letter_manager.robot_manager(letter, initial_x, initial_y)
-                if waypoints_up is None:
-                    self.get_logger().warn(f"Letter {letter} is not configured. Skipping")
-                    continue
-                for wp_up in waypoints_up:
-                    goal_future = self.send_goal(wp_up[0], wp_up[1], 0.0)
-                    rclpy.spin_until_future_complete(self, goal_future)
-        else:
-            self.get_logger().info(f'\n \n --- Robot not configured. Skipping --- \n \n')
+
+        self.get_logger().info(f'\n \n --- Drawing robot :) --- \n \n')
+        current_x = initial_x
+        current_y = initial_y
+        current_theta = 0.0
+
+        for part in robot_parts:
+            if part == "MOUTH":
+                current_x, current_y, current_theta = initial_x, initial_y, 0.0
+                self.teleport_absoulte_service(current_x, current_y, current_theta)
+
+            elif part == "EYE" and eye_count == 0:
+                self.get_logger().info("Teleporting up for first eye")
+                current_x, current_y, current_theta = initial_x - 0.5, initial_y + 0.75, math.pi / 2
+                self.teleport_absoulte_service(current_x, current_y, current_theta)
+                eye_count = 1
+
+            elif part == "EYE" and eye_count == 1:
+                self.get_logger().info("Teleporting left for second eye")
+                current_x, current_y, current_theta = initial_x - 1.5, initial_y + 0.75, math.pi / 2
+                self.teleport_absoulte_service(current_x, current_y, current_theta)
+
+            elif part == "ROBOT":
+                self.get_logger().info("Teleporting for face")
+                current_x, current_y, current_theta = initial_x - 2.15, initial_y + 0.5, math.pi / 2
+                self.teleport_absoulte_service(current_x, current_y, current_theta)
+
+            # Generar waypoints desde la posición actual
+            waypoints_up = self.drawer_manager.robot_manager(part, current_x, current_y)
+            if waypoints_up is None:
+                self.get_logger().warning(f"Robot part {part} is not configured. Skipping")
+                continue
+
+            for wp_up in waypoints_up:
+                goal_future = self.send_goal(wp_up[0], wp_up[1], 0.0)
+                rclpy.spin_until_future_complete(self, goal_future)
+
 
                 
     def draw_word(self, word, initial_x, initial_y, direction):
@@ -150,11 +174,11 @@ class TurtleManager(Node):
                                  random.randint(self.word_line_green[0], self.word_line_green[1]),
                                  random.randint(self.word_line_blue[0], self.word_line_blue[1]))
                 
-                waypoints_up = self.letter_manager.manager(letter,initial_x,initial_y, direction)
+                waypoints_up = self.drawer_manager.manager(letter,initial_x,initial_y, direction)
 
                 # Loop to move the turtle to the waypoints of the letter 
                 if waypoints_up is None:
-                    self.get_logger().warn(f"Letter {letter} is not configured. Skipping")
+                    self.get_logger().warning(f"Letter {letter} is not configured. Skipping")
                     continue
 
                 for wp_up in waypoints_up:
@@ -279,7 +303,7 @@ class TurtleManager(Node):
         # Change the color to the default line color to hide the line
         self.pen_service(self.line_default_color[0],self.line_default_color[1],self.line_default_color[2],self.line_width, 0)
         
-        self.get_logger().info(f"Turtle teleported to the {linear, angular} relative position")
+        self.get_logger().info(f"Turtle teleported to the {round(linear,2), round(angular,2)} relative position")
 
     def teleport_absoulte_service(self, x, y , theta):
         """ Service wrapper to move the turtle to an absolute position"""
@@ -302,7 +326,7 @@ class TurtleManager(Node):
         # Change the color to the default line color to hide the line
         self.pen_service(self.line_default_color[0],self.line_default_color[1],self.line_default_color[2],self.line_width, 0)
         
-        self.get_logger().info(f"Turtle teleported to {x,y,theta}")
+        self.get_logger().info(f"Turtle teleported to {round(x,2),round(y,2),round(theta,2)}")
 
     def service_callback(self, future):
         try:
@@ -321,38 +345,38 @@ class TurtleManager(Node):
 
         direction = direction.upper()
         if direction not in DIRECTION:
-            self.get_logger().info(f'\n \n --- Received direction {direction} is not configured. Please use {DIRECTION} --- \n \n')  
+            self.get_logger().warning(f'\n \n --- Received direction {direction} is not configured. Please use {DIRECTION} --- \n \n')  
             return False
         
         if direction == "RIGHT":
             if initial_x + (self.letter_width + self.letter_offset_x) * (len(word)-1) > SCREEN_SIZE:
-                self.get_logger().info(
+                self.get_logger().warning(
                     f"The configured parameters are invalid: the word '{word}' exceeds the screen width.")
                 return False
             if self.letter_offset_y > 0:
                 if initial_y + self.letter_height + self.letter_offset_y * (len(word)-1) > SCREEN_SIZE:
-                    self.get_logger().info(
+                    self.get_logger().warning(
                         f"The configured parameters are invalid: the word '{word}' exceeds the screen height.")
                     return False
             else:
                 if initial_y + self.letter_offset_y * (len(word)-1) < SCREEN_SIZE/2:
-                    self.get_logger().info(
+                    self.get_logger().warning(
                         f"The configured parameters are invalid: the word '{word}' height is too low (above mid screen).")
                     return False
 
         elif direction == "LEFT":
             if initial_x - (self.letter_width + self.letter_offset_x) * (len(word)-1) < 0:
-                self.get_logger().info(
+                self.get_logger().warning(
                     f"The configured parameters are invalid: the word '{word}' exceeds the screen width on the left.")
                 return False
             if self.letter_offset_y > 0:
                 if initial_y + self.letter_height + self.letter_offset_y * (len(word)-1) > SCREEN_SIZE / 2:
-                    self.get_logger().info(
+                    self.get_logger().warning(
                         f"The configured parameters are invalid: the word '{word}' height is too low (below mid screen).")
                     return False
             else:
                 if initial_y + self.letter_offset_y * (len(word)-1) < 0:
-                    self.get_logger().info(
+                    self.get_logger().warning(
                         f"The configured parameters are invalid: the word '{word}' exceeds the screen height (above).")
                     return False
                 

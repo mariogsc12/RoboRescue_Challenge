@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import math
 DIRECTION = ["LEFT", "RIGHT"]
-DEFINED_LETTERS = ["R","O","B"]
+DEFINED_LETTERS = ["R","O","B","R","S","C","U","I"]
 
-class LetterManager:
-    """ Main class to manage the trajectory for drawing a letter. \n
+class DrawerManager:
+    """ Main class to manage the trajectory for drawing a letter or an object. \n
     The turtle should start from the bottom right or bottom left, depending on the desired direction. """
 
 
-    def __init__(self, length, width):
-        self.length = length
+    def __init__(self, height, width):
+        self.height = height
         self.width = width
 
     def manager(self, letter_, origin_x, origin_y, direction):
@@ -39,22 +39,22 @@ class LetterManager:
         else:
             return None
         
-    def robot_manager(self, letter_, origin_x, origin_y):
+    def robot_manager(self, part, origin_x, origin_y):
         """ Wrapper function to return a list of points to draw the robot and the antenna circle"""
-        letter = letter_.upper()
+        letter = part.upper()
         
-        if letter == "X":
+        if letter == "MOUTH":
             return self.draw_MOUTH(origin_x, origin_y)
-        elif letter == "Y":
+        elif letter == "EYE":
             return self.draw_EYE(origin_x, origin_y)
-        elif letter == "Z":
+        elif letter == "ROBOT":
             return self.draw_ROBOT(origin_x, origin_y)
         else:
             return None
         
     def draw_R(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter R"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -87,7 +87,7 @@ class LetterManager:
 
     def draw_O(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter O"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -109,7 +109,7 @@ class LetterManager:
 
     def draw_B(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter B"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -137,7 +137,7 @@ class LetterManager:
 
     def draw_S(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """Returns a list of points (x, y) to draw the letter S"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -171,7 +171,7 @@ class LetterManager:
         
     def draw_C(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """Returns a list of points (x, y) to draw the letter C"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -201,7 +201,7 @@ class LetterManager:
         
     def draw_U(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """Returns a list of points (x, y) to draw the letter U"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -231,7 +231,7 @@ class LetterManager:
 
     def draw_E(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """Returns a list of points (x, y) to draw the letter E"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -265,7 +265,7 @@ class LetterManager:
     
     def draw_I(self, origin_x=5.54, origin_y=5.54, direction="RIGHT"):
         """ Returns a list of points (x,y) to draw the letter I """
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -291,7 +291,7 @@ class LetterManager:
     
     def draw_MOUTH(self, origin_x=5.54, origin_y=5.54):
         """Returns a list of points (x,y) to draw an eye (circle starting from bottom, CCW)"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
         
@@ -307,7 +307,7 @@ class LetterManager:
 
     def draw_EYE(self, origin_x=5.54, origin_y=5.54):
         """Returns a list of points (x,y) to draw an eye (circle starting from bottom, CCW)"""
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
@@ -324,29 +324,28 @@ class LetterManager:
     def draw_ROBOT(self, origin_x=5.54, origin_y=5.54):
         """ Returns a list of points (x,y) to draw the robot and the antenna circle """
 
-        l = self.length
+        l = self.height
         w = self.width
         x0, y0 = origin_x, origin_y
 
         points = [
-            ##OREJA IZQUIERDA
+            ##LEFT EAR
             (x0, y0),               # start point
             (x0, y0 + l / 6),
             (x0, y0 - l / 6),
             (x0, y0),
             (x0 + w/3, y0),
-            ##CABEZON PARTE SUPERIOR
+            ##UPPER HEAD 
             (x0 + w/3, y0 + l/2),
             (x0 + (w), y0 + l/2),
             (x0 + (w), y0 + l/1.25),
         ]
-        # CÍRCULO DE LA ANTENA
+        # ANTENNA BALL
         cx = x0 + w
         cy = y0 + l/1.25
         r = w / 6
-        segments = 12  # más segmentos = círculo más preciso
+        segments = 12  # MORE SEMENTS = SMOOTHER CIRCLE 
 
-        # vuelta completa)
         start_angle = 3 * math.pi / 2
         end_angle = start_angle + 2 * math.pi
 
@@ -356,24 +355,25 @@ class LetterManager:
             x = cx + r * math.cos(angle)
             y = cy + r * math.sin(angle)
             circle.append((x, y))
-        circle.append(circle[0])  # cerrar el círculo
+        circle.append(circle[0])  # CLOSE CIRCLE
 
         points.extend(circle)
-        # Continuación del dibujo
+        # CONTINUE ROBOT DRAWING
         points += [
             (x0 + (w), y0 + l/2),
             (x0 + (w*(5/3)), y0 + l/2),
             (x0 + (w*(5/3)), y0),
-            #OREJA DERECHA
+            #RIGHT EAR
             (x0 + (w*(6/3)), y0),
             (x0 + (w*(6/3)), y0 + l / 6),
             (x0 + (w*(6/3)), y0 - l / 6),
             (x0 + (w*(6/3)), y0),
             (x0 + (w*(5/3)), y0),
-            #Cabeza parte inferior
+            #LOWER HEAD
             (x0 + (w*(5/3)), y0 - l/2),
             (x0 + w/3, y0 - l/2),
             (x0 + w/3, y0),
+            (x0,y0),
         ]
 
         return points   
