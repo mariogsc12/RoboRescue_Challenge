@@ -329,22 +329,22 @@ class DrawerManager:
         x0, y0 = origin_x, origin_y
 
         points = [
-            # LEFT EAR
+            ##LEFT EAR
             (x0, y0),               # start point
             (x0, y0 + l / 6),
             (x0, y0 - l / 6),
             (x0, y0),
             (x0 + w/3, y0),
-            # HEAD
+            ##UPPER HEAD 
             (x0 + w/3, y0 + l/2),
             (x0 + (w), y0 + l/2),
             (x0 + (w), y0 + l/1.25),
         ]
-        # ANTENNA
+        # ANTENNA BALL
         cx = x0 + w
         cy = y0 + l/1.25
         r = w / 6
-        segments = 12  # more segments = better circle
+        segments = 12  # MORE SEMENTS = SMOOTHER CIRCLE 
 
         start_angle = 3 * math.pi / 2
         end_angle = start_angle + 2 * math.pi
@@ -355,24 +355,25 @@ class DrawerManager:
             x = cx + r * math.cos(angle)
             y = cy + r * math.sin(angle)
             circle.append((x, y))
-        circle.append(circle[0])  # close circle
+        circle.append(circle[0])  # CLOSE CIRCLE
 
         points.extend(circle)
-        # Continue drawing
+        # CONTINUE ROBOT DRAWING
         points += [
             (x0 + (w), y0 + l/2),
             (x0 + (w*(5/3)), y0 + l/2),
             (x0 + (w*(5/3)), y0),
-            # RIGHT EAR
+            #RIGHT EAR
             (x0 + (w*(6/3)), y0),
             (x0 + (w*(6/3)), y0 + l / 6),
             (x0 + (w*(6/3)), y0 - l / 6),
             (x0 + (w*(6/3)), y0),
             (x0 + (w*(5/3)), y0),
-            # Head part 2
+            #LOWER HEAD
             (x0 + (w*(5/3)), y0 - l/2),
             (x0 + w/3, y0 - l/2),
             (x0 + w/3, y0),
+            (x0,y0),
         ]
 
         return points   

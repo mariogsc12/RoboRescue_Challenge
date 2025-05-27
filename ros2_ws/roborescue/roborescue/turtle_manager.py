@@ -43,7 +43,7 @@ class TurtleManager(Node):
         self.declare_parameter('draw_robot', True)
         self.declare_parameter('initial_pos_word_up', [2.0,6.0]) 
         self.declare_parameter('initial_pos_word_down', [8.9,1.5]) 
-        self.declare_parameter('initial_pos_robot', [7.5, 5.5])
+        self.declare_parameter('initial_pos_robot', [9.75, 6.5])
         self.declare_parameter('word_line_red', [0, 255]) 
         self.declare_parameter('word_line_green', [0, 255]) 
         self.declare_parameter('word_line_blue', [0, 255]) 
@@ -103,34 +103,49 @@ class TurtleManager(Node):
         
     def draw_robot(self, initial_x, initial_y):
         "Logic to draw a robot shilouette whether you want to draw it or not"
-        robot_parts = ["MOUTH","EYE","EYE","ROBOT"]
+        letter_array = ["X", "Y", "Y", "Z"]
         eye_count = 0
         if not self.draw_robot_config:
             self.get_logger().info(f'\n \n --- You dont want the robot drawing :''( . Skipping --- \n \n')
             return
+
+        current_x = initial_x
+        current_y = initial_y
+        current_theta = 0.0
+
+        for letter in letter_array:
+            if letter == "X":
+                current_x, current_y, current_theta = initial_x, initial_y, 0.0
+                self.teleport_absoulte_service(current_x, current_y, current_theta)
+
+            elif letter == "Y" and eye_count == 0:
+                self.get_logger().info("Teleporting up for first eye")
+                current_x, current_y, current_theta = initial_x - 0.5, initial_y + 0.75, math.pi / 2
+                self.teleport_absoulte_service(current_x, current_y, current_theta)
+                eye_count = 1
+
+            elif letter == "Y" and eye_count == 1:
+                self.get_logger().info("Teleporting left for second eye")
+                current_x, current_y, current_theta = initial_x - 1.5, initial_y + 0.75, math.pi / 2
+                self.teleport_absoulte_service(current_x, current_y, current_theta)
+
+            elif letter == "Z":
+                self.get_logger().info("Teleporting for face")
+                current_x, current_y, current_theta = initial_x - 2.15, initial_y + 0.5, math.pi / 2
+                self.teleport_absoulte_service(current_x, current_y, current_theta)
+
+            # Generar waypoints desde la posición actual
+            waypoints_up = self.letter_manager.robot_manager(letter, current_x, current_y)
+            if waypoints_up is None:
+                self.get_logger().warn(f"Letter {letter} is not configured. Skipping")
+                continue
+
+            for wp_up in waypoints_up:
+                goal_future = self.send_goal(wp_up[0], wp_up[1], 0.0)
+                rclpy.spin_until_future_complete(self, goal_future)
+
         else:
-            for part in robot_parts:
-                if part=="MOUTH":
-                    self.teleport_absoulte_service(initial_x,initial_y,0.0)
-                elif part == "EYE" and eye_count == 0:
-                    self.get_logger().info("Teleporting up for first eye")
-                    self.teleport_absoulte_service(initial_x, initial_y, math.pi/2)
-                    eye_count = 1
-                elif part == "EYE" and eye_count == 1:
-                    self.get_logger().info("Teleporting left for second eye")
-                    self.teleport_absoulte_service(initial_x, initial_y + 0.75, math.pi)
-                elif part == "ROBOT":
-                    self.get_logger().info("Teleporting for face")
-                    self.teleport_absoulte_service(initial_x, initial_y, math.pi/2)
-
-                waypoints = self.drawer_manager.robot_manager(part, initial_x, initial_y)
-
-                if waypoints is None:
-                    self.get_logger().warn(f"Part {part} is not configured. Skipping")
-                    continue
-                for wp in waypoints:
-                    goal_future = self.send_goal(wp[0], wp[1], 0.0)
-                    rclpy.spin_until_future_complete(self, goal_future)
+            self.get_logger().info(f'\n \n --- Robot not configured. Skipping --- \n \n')
 
                 
     def draw_word(self, word, initial_x, initial_y, direction):

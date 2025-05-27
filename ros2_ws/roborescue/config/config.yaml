@@ -5,7 +5,7 @@ turtle_manager:
     draw_robot: True	          		    # (bool) -> use to draw a robot
     initial_pos_word_up: [2.0, 6.0]     # (double) -> [x,y]
     initial_pos_word_down: [8.9, 2.0]   # (double) -> [x,y]
-    nitial_pos_robot: [7.5, 5.5]	# (double) -> [x,y]
+    initial_pos_robot: [9.75, 6.5]	# (double) -> [x,y]
     word_line_red:   [0, 255]           # (double) -> [max,min] -> use the same value for fixed color
     word_line_green: [0, 255]           # (double) -> [max,min] -> use the same value for fixed color
     word_line_blue:  [0, 100]           # (double) -> [max,min] -> use the same value for fixed color
