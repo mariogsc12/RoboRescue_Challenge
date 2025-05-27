@@ -1,8 +1,8 @@
 turtle_manager:
   ros__parameters:
-    word_up: "ROBO"                     # (string)
-    word_down: "RESCUE"                 # (string)
-    robot: True	          		# (bool)
+    word_up: ""                     # (string)
+    word_down: ""                 # (string)
+    draw_robot: True	          		    # (bool) -> use to draw a robot
     initial_pos_word_up: [2.0, 6.0]     # (double) -> [x,y]
     initial_pos_word_down: [8.9, 2.0]   # (double) -> [x,y]
     nitial_pos_robot: [7.5, 5.5]	# (double) -> [x,y]

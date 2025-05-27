@@ -20,7 +20,7 @@ install(
 
 install(PROGRAMS 
   ${PROJECT_NAME}/utils.py
-  ${PROJECT_NAME}/letter_manager.py
+  ${PROJECT_NAME}/drawer_manager.py
   ${PROJECT_NAME}/turtle_manager.py
   ${PROJECT_NAME}/goto_action_server.py
   DESTINATION lib/${PROJECT_NAME}
