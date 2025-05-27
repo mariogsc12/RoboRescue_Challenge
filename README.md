@@ -107,7 +107,9 @@ Here are some example variations:
 - Implement parallel processing of letters using multiple turtles simultaneously to speed up drawing.    
 - Add customizable colors and styles per letter or word.  
 - Integrate advanced path planning to avoid overlaps and collisions between turtles and walls.  
-
+- Additionally, there are two different branches available.
+    The first one, `draw_robot`, is used to implement the logic for drawing a robot.
+    The second one, `different_turtles`, is used to make the changes necessary to draw a word using different turtles moving in parallel.
 ---
    
 ## 🙌 Acknowledgments
